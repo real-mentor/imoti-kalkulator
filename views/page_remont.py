@@ -1,7 +1,7 @@
 """Страница 6 — Ремонт."""
 from __future__ import annotations
 import streamlit as st
-import plotly.figure_factory as ff
+import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 from datetime import date, timedelta
@@ -218,32 +218,36 @@ def render():
     st.markdown("---")
     st.markdown("### 📅 Линеен график (Gantt)")
 
-    gantt_data = []
+    gantt_rows = []
     for faza in FAZI_REMONT:
         start = start_date + timedelta(days=faza["den_start"] - 1)
         end = start + timedelta(days=faza["prodylzhitelnost"])
-        gantt_data.append({
-            "Task": faza["faza"],
-            "Start": start.strftime("%Y-%m-%d"),
-            "Finish": end.strftime("%Y-%m-%d"),
-            "Color": faza["color"],
+        gantt_rows.append({
+            "Фаза": faza["faza"],
+            "Начало": start,
+            "Край": end,
+            "Цвят": faza["color"],
         })
 
-    fig_gantt = ff.create_gantt(
-        gantt_data,
-        colors=[f["Color"] for f in FAZI_REMONT],
-        index_col="Task",
-        show_colorbar=False,
-        group_tasks=True,
-        showgrid_x=True,
-        showgrid_y=True,
+    df_gantt = pd.DataFrame(gantt_rows)
+
+    fig_gantt = px.timeline(
+        df_gantt,
+        x_start="Начало",
+        x_end="Край",
+        y="Фаза",
+        color="Фаза",
+        color_discrete_sequence=[f["color"] for f in FAZI_REMONT],
         title="График за ремонт (~8 седмици)",
     )
+    fig_gantt.update_yaxes(autorange="reversed")
     fig_gantt.update_layout(
         **PLOTLY_DARK,
         height=380,
-        margin=dict(l=180, r=20, t=40, b=20),
+        showlegend=False,
+        margin=dict(l=10, r=10, t=40, b=20),
         xaxis=dict(gridcolor="#2d3151"),
+        yaxis=dict(gridcolor="#2d3151"),
     )
     st.plotly_chart(fig_gantt, use_container_width=True)
 
