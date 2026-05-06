@@ -96,20 +96,20 @@ with st.sidebar:
 page = st.session_state.page
 
 if page == "home":
-    from pages.page_home import render
+    from views.page_home import render
     render()
 elif page == "profil":
-    from pages.page_profil import render
+    from views.page_profil import render
     render()
 elif page == "imot":
-    from pages.page_imot import render
+    from views.page_imot import render
     render()
 elif page == "strategii":
-    from pages.page_strategii import render
+    from views.page_strategii import render
     render()
 elif page == "checklist":
-    from pages.page_checklist import render
+    from views.page_checklist import render
     render()
 elif page == "remont":
-    from pages.page_remont import render
+    from views.page_remont import render
     render()
