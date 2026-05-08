@@ -6,6 +6,7 @@ import plotly.express as px
 import pandas as pd
 from typing import Optional
 
+from utils.database import save_calculation
 from utils.market_data import (
     PROGRES_KOEFICIENTI, RISK_ETAP, INFLACIYA_GOD, PAZARNO_POSKAPVANE_GOD,
 )
@@ -427,6 +428,55 @@ def render():
 
     if preporyaka["najdobra_strategia"]:
         st.markdown(f"💡 {preporyaka['najdobra_strategia']['pricina']}")
+
+    # ═══════════════════════════════════════════════════
+    # ЗАПАЗИ КАЛКУЛАЦИЯ
+    # ═══════════════════════════════════════════════════
+    st.markdown("---")
+    st.markdown("### 💾 Запази тази калкулация")
+
+    user = st.session_state.user
+    if user:
+        save_name = st.text_input(
+            "Наименование",
+            key="save_calc_name",
+            placeholder=f"напр. Апартамент {im.get('grad', '')} {int(im.get('cena', 0) / 1000)}к",
+            help="Дай кратко описание за лесно намиране по-късно",
+        )
+
+        col_save, col_info = st.columns([1, 2])
+        with col_save:
+            if st.button("💾  Запази калкулацията", use_container_width=True):
+                if not save_name.strip():
+                    st.error("Въведи наименование.")
+                else:
+                    results_dict = {
+                        "roi_pct": препоръчана_стр["roi_pct"],
+                        "pechalba": препоръчана_стр["pechalba"],
+                        "vlozhenie": препоръчана_стр["vlozhenie"],
+                        "srok_mes": препоръчана_стр["srok_mes"],
+                    }
+                    with st.spinner("Запазва се..."):
+                        calc_id, err = save_calculation(
+                            user_id=user["id"],
+                            name=save_name.strip(),
+                            property_data=dict(im),
+                            results=results_dict,
+                            strategy=препоръчана_стр["ime"],
+                        )
+                    if calc_id:
+                        st.success(f"Запазено! Виж в 📋 Моите имоти.")
+                    else:
+                        st.error(f"Грешка: {err}")
+        with col_info:
+            st.markdown(
+                '<p style="color:#6b7280;font-size:0.8rem;margin-top:0.5rem">'
+                'Запазената калкулация ще се появи в <strong style="color:#c9a84c">Моите имоти</strong>, '
+                'откъдето можеш да я заредиш отново или да добавиш бележки.</p>',
+                unsafe_allow_html=True,
+            )
+    else:
+        st.info("Влез в акаунта си, за да запазваш калкулации.")
 
     st.markdown("<br>", unsafe_allow_html=True)
     col_btn, _, _ = st.columns([1, 1, 1])

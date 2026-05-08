@@ -1,7 +1,22 @@
+# Python
 venv/
 __pycache__/
 *.pyc
-.DS_Store
-.claude/
-*.egg-info/
+*.pyo
+.Python
+
+# Secrets
 .env
+*.env
+.streamlit/secrets.toml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+admin/logs/

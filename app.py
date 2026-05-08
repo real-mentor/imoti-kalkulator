@@ -1,6 +1,6 @@
 """
 Real Mentor — Калкулатор за имотни инвестиции в България
-Главен файл: навигация и session state.
+Главен файл: auth, навигация и session state.
 """
 from __future__ import annotations
 import streamlit as st
@@ -15,12 +15,12 @@ st.set_page_config(
 
 st.markdown(DARK_THEME_CSS, unsafe_allow_html=True)
 
-# ─── SESSION STATE ────────────────────────────────────────────────────────────
+# ─── SESSION STATE ────────────────────────────────────────────
 
 def init_state():
     defaults = {
         "page": "home",
-        # Профил на инвеститора
+        "user": None,          # {"id": ..., "email": ...} при логнат
         "profil": {
             "neto_zaplata": 2000.0,
             "partnyor_dohod": 0.0,
@@ -33,16 +33,16 @@ def init_state():
             "grad": "София",
             "target_cash_flow": 0.0,
         },
-        # Имот от Страница 3
         "imot": {
+            "vid_imot": "2-стаен",
             "cena": 150000.0,
             "kvadraturi": 65.0,
             "grad": "София",
-            "zona": "Средна зона",
+            "zona": "Лозенец",
             "etaj": 3,
             "obshto_etaji": 8,
             "izlozhenie": "Юг",
-            "tip_stroitelstvo": "Ново строителство",
+            "tip_stroitelstvo": "Ново строителство",  # Ново строителство | Монолит (2000–2010) | Старо — тухла / ЕПК | Старо — панел
             "etap": "Акт 16 (готов нов)",
             "ochakvаn_naem": 650.0,
             "remont_byudzhet": 0.0,
@@ -58,21 +58,42 @@ def init_state():
 
 init_state()
 
-# ─── НАВИГАЦИЯ ────────────────────────────────────────────────────────────────
+# ─── AUTH GATE ────────────────────────────────────────────────
+# Ако не е логнат → показва Login/Register страница
+
+if st.session_state.user is None:
+    from views.page_auth import render as render_auth
+    render_auth()
+    st.stop()
+
+# ─── НАВИГАЦИЯ (само за логнати) ──────────────────────────────
 
 PAGES = {
     "home":       ("🏠", "Начало"),
     "profil":     ("👤", "Профил"),
     "imot":       ("🏗️", "Оценка на имот"),
     "strategii":  ("📊", "Стратегии"),
+    "moite_imoti":("📋", "Моите имоти"),
     "checklist":  ("✅", "Чеклист"),
     "remont":     ("🔨", "Ремонт"),
+    "settings":   ("⚙️", "Настройки"),
 }
 
 with st.sidebar:
     st.markdown(
         '<p style="color:#c9a84c;font-weight:700;font-size:1.1rem;margin-bottom:0">Real Mentor</p>'
-        '<p style="color:#6b7280;font-size:0.75rem;margin-top:0;margin-bottom:1.5rem">Имотен Калкулатор</p>',
+        '<p style="color:#6b7280;font-size:0.75rem;margin-top:0;margin-bottom:1rem">Имотен Калкулатор</p>',
+        unsafe_allow_html=True,
+    )
+
+    # Имейл на потребителя
+    email = st.session_state.user.get("email", "")
+    st.markdown(
+        f'<div style="background:#1e2235;border:1px solid #2d3151;border-radius:8px;'
+        f'padding:0.5rem 0.75rem;margin-bottom:1rem">'
+        f'<p style="color:#9ca3af;font-size:0.65rem;margin:0">ЛОГНАТ КАТО</p>'
+        f'<p style="color:#c9a84c;font-size:0.8rem;margin:0;word-break:break-all">{email}</p>'
+        f'</div>',
         unsafe_allow_html=True,
     )
 
@@ -84,14 +105,21 @@ with st.sidebar:
             st.rerun()
 
     st.markdown("---")
+
+    if st.button("🚪  Излез", use_container_width=True):
+        from utils.database import logout
+        logout()
+        st.session_state.user = None
+        st.session_state.page = "home"
+        st.rerun()
+
     st.markdown(
-        '<p style="color:#6b7280;font-size:0.7rem;text-align:center">'
-        'Real Mentor · 2026<br>'
-        'Данни: Q1 2026</p>',
+        '<p style="color:#6b7280;font-size:0.7rem;text-align:center;margin-top:0.5rem">'
+        'Real Mentor · 2026<br>Данни: Q1 2026</p>',
         unsafe_allow_html=True,
     )
 
-# ─── ЗАРЕЖДАНЕ НА СТРАНИЦА ────────────────────────────────────────────────────
+# ─── ЗАРЕЖДАНЕ НА СТРАНИЦА ────────────────────────────────────
 
 page = st.session_state.page
 
@@ -107,9 +135,15 @@ elif page == "imot":
 elif page == "strategii":
     from views.page_strategii import render
     render()
+elif page == "moite_imoti":
+    from views.page_moite_imoti import render
+    render()
 elif page == "checklist":
     from views.page_checklist import render
     render()
 elif page == "remont":
     from views.page_remont import render
+    render()
+elif page == "settings":
+    from views.page_settings import render
     render()

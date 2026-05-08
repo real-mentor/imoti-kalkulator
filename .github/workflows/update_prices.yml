@@ -1,0 +1,47 @@
+name: Обновяване на пазарни цени
+
+on:
+  # Автоматично на 9-то число всеки месец в 8:00 UTC (11:00 българско)
+  schedule:
+    - cron: "0 8 9 * *"
+
+  # Ръчно пускане от GitHub → Actions → Run workflow
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Причина за ръчно пускане (незадължително)"
+        required: false
+        default: "Ръчна актуализация"
+
+jobs:
+  update-prices:
+    name: Обнови цени от imot.bg
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Изтегли кода
+        uses: actions/checkout@v4
+
+      - name: Настрой Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: admin/requirements.txt
+
+      - name: Инсталирай зависимости
+        run: pip install -r admin/requirements.txt
+
+      - name: Изпълни скрипта за обновяване
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: python admin/update_prices.py
+
+      - name: Провери резултата
+        if: failure()
+        run: |
+          echo "❌ Скриптът fail-на! GitHub ще изпрати email нотификация."
+          echo "Провери логовете по-горе за детайли."
+          exit 1
