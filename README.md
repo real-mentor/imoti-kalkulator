@@ -13,11 +13,40 @@ venv/bin/streamlit run app.py
 
 ## Автоматично обновяване на цени
 
-### Как работи
+### Ръчно пускане от твоя Mac (препоръчително)
 
-Скриптът `admin/update_prices.py` автоматично:
-1. Изтегля актуални обяви от imot.bg за ~18 ключови квартала
-2. Изчислява median цена €/кв.м от реални обяви
+imot.bg блокира GitHub Actions IP адреси (стандартна anti-bot защита).
+За реални актуализирани цени — пускай скрипта **локално**:
+
+```bash
+cd ~/Desktop/imoti-kalkulator-v2
+source venv/bin/activate
+python admin/update_prices.py
+```
+
+Скриптът:
+- **Фаза 1** (винаги): записва всички baseline цени от `utils/locations.py` в Supabase
+- **Фаза 2** (от твоя Mac): scrape-ва 22 квартала от imot.bg и обновява с реални цени
+
+Препоръчвам да го пускаш веднъж месечно (около 9-то число).
+
+### GitHub Actions (автоматично на 9-то число)
+
+Workflow-ът се пуска автоматично, но най-вероятно **Фаза 2 ще fail-не** поради IP блокиране.
+Това е нормално — Фаза 1 (baseline) ще се изпълни успешно и exit кодът е 0.
+GitHub **няма да изпрати** email нотификация при scraping failure.
+Email нотификация ще получиш само ако Supabase е недостъпен.
+
+### Как работи скриптът
+
+1. Изтегля начална страница на imot.bg за cookies и сесия
+2. Ротира между 3 различни User-Agent headers
+3. За всеки квартал: fetch SEO URL → decode Windows-1251 → парсва `div.item`
+4. Извлича EUR цена от `div.price > div` и кв.м от `div.info`
+5. Изчислява median €/кв.м от всички обяви
+6. Upsert в Supabase таблица `market_prices`
+
+### Как работи
 3. Записва резултатите в Supabase таблица `market_prices`
 4. При неуспех — запазва baseline стойностите от `utils/locations.py`
 

@@ -38,10 +38,15 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         run: python admin/update_prices.py
+        # Скриптът връща exit 0 дори при scraping failure.
+        # exit 1 само ако Supabase е недостъпен (критична грешка).
 
-      - name: Провери резултата
-        if: failure()
+      - name: Резюме
+        if: always()
         run: |
-          echo "❌ Скриптът fail-на! GitHub ще изпрати email нотификация."
-          echo "Провери логовете по-горе за детайли."
-          exit 1
+          echo "──────────────────────────────────────"
+          echo "Workflow завършен."
+          echo "Baseline стойностите винаги се записват."
+          echo "Scraping от imot.bg може да е блокиран от CI/CD IP."
+          echo "За актуални цени: пусни локално от Mac."
+          echo "──────────────────────────────────────"
