@@ -6,11 +6,42 @@ from __future__ import annotations
 import os
 from typing import Optional, Tuple, Any, Dict, List
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
 _client = None
+
+
+def _get_supabase_config() -> tuple:
+    """
+    Чете SUPABASE_URL и SUPABASE_KEY по приоритет:
+    1. st.secrets  — Streamlit Cloud (App Settings → Secrets)
+    2. os.environ  — GitHub Actions / Docker / системни env vars
+    3. .env файл   — локална разработка
+    """
+    # 1. Streamlit secrets
+    try:
+        import streamlit as st
+        url = st.secrets["SUPABASE_URL"]
+        key = st.secrets["SUPABASE_KEY"]
+        if url and key:
+            return url, key
+    except Exception:
+        pass
+
+    # 2. Environment variables (вече заредени от shell или CI)
+    url = os.environ.get("SUPABASE_URL", "")
+    key = os.environ.get("SUPABASE_KEY", "")
+    if url and key:
+        return url, key
+
+    # 3. .env файл (локална разработка)
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
+        url = os.environ.get("SUPABASE_URL", "")
+        key = os.environ.get("SUPABASE_KEY", "")
+    except ImportError:
+        pass
+
+    return url, key
 
 
 def get_client():
@@ -18,10 +49,13 @@ def get_client():
     global _client
     if _client is None:
         from supabase import create_client
-        url = os.getenv("SUPABASE_URL", "")
-        key = os.getenv("SUPABASE_KEY", "")
+        url, key = _get_supabase_config()
         if not url or not key or "тук_ще_сложа" in url:
-            raise ValueError("Supabase URL и KEY не са конфигурирани в .env файла.")
+            raise ValueError(
+                "Supabase URL и KEY не са конфигурирани. "
+                "Streamlit Cloud: App Settings → Secrets → добави SUPABASE_URL и SUPABASE_KEY. "
+                "Локално: добави .env файл."
+            )
         _client = create_client(url, key)
     return _client
 
