@@ -1,5 +1,6 @@
 """Страница 4 — Сравнение на 7 стратегии."""
 from __future__ import annotations
+from datetime import date
 import streamlit as st
 import plotly.graph_objects as go
 import plotly.express as px
@@ -422,6 +423,38 @@ def render():
 
     if preporyaka["najdobra_strategia"]:
         st.markdown(f"💡 {preporyaka['najdobra_strategia']['pricina']}")
+
+    # ── PDF ИЗТЕГЛЯНЕ ──────────────────────────────────────────────────────────
+    st.markdown("<br>", unsafe_allow_html=True)
+    col_pdf, _, _ = st.columns([1, 1, 1])
+    with col_pdf:
+        try:
+            from utils.pdf_export import generate_report
+            user_email = (st.session_state.user or {}).get("email", "")
+            # Подготви списък стратегии за PDF
+            strategii_pdf = [
+                {"ime": s["ime"], "vlozhenie": s["vlozhenie"],
+                 "pechalba": s["pechalba"], "roi_pct": s["roi_pct"],
+                 "srok_mes": s["srok_mes"], "risk": s["risk"]}
+                for s in strategii
+            ]
+            pdf_bytes = generate_report(
+                profil=dict(profil),
+                imot=dict(im),
+                strategii=strategii_pdf,
+                najdobra_strategia=preporyaka.get("najdobra_strategia"),
+                user_email=user_email,
+            )
+            filename = f"Real_Mentor_Analiz_{date.today()}.pdf"
+            st.download_button(
+                label="📄  Изтегли пълния анализ като PDF",
+                data=pdf_bytes,
+                file_name=filename,
+                mime="application/pdf",
+                use_container_width=True,
+            )
+        except Exception as e:
+            st.caption(f"PDF грешка: {e}")
 
     # ═══════════════════════════════════════════════════
     # ЗАПАЗИ КАЛКУЛАЦИЯ

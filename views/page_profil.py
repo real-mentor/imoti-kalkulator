@@ -1,5 +1,6 @@
 """Страница 2 — Профил на инвеститора."""
 from __future__ import annotations
+from datetime import date
 import streamlit as st
 from utils.calculations import kreditен_kapacitet
 from utils.recommendation import preporycha_strategia, profil_preporyaka_tekst
@@ -195,10 +196,29 @@ def render():
                 rank = "🥇" if i == 0 else "🥈" if i == 1 else "🥉" if i == 2 else f"{i+1}."
                 st.markdown(f"**{rank} {s['ime']}** — {s['pricina']}")
 
-    # ── CTA ───────────────────────────────────────────────────────────────────
+    # ── CTA + PDF ─────────────────────────────────────────────────────────────
     st.markdown("---")
-    col_btn, _, _ = st.columns([1, 1, 1])
+    col_btn, col_pdf, _ = st.columns([1, 1, 1])
     with col_btn:
         if st.button("➡️  Продължи към Оценка на имот", type="primary", use_container_width=True):
             st.session_state.page = "imot"
             st.rerun()
+    with col_pdf:
+        try:
+            from utils.pdf_export import generate_report
+            user_email = (st.session_state.user or {}).get("email", "")
+            pdf_bytes = generate_report(
+                profil=dict(p),
+                imot=dict(st.session_state.imot),
+                user_email=user_email,
+            )
+            filename = f"Real_Mentor_Analiz_{date.today()}.pdf"
+            st.download_button(
+                label="📄  Изтегли анализа като PDF",
+                data=pdf_bytes,
+                file_name=filename,
+                mime="application/pdf",
+                use_container_width=True,
+            )
+        except Exception as e:
+            st.caption(f"PDF грешка: {e}")
