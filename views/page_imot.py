@@ -10,7 +10,7 @@ from utils.market_data import (
     LIHVA_DEFAULT, NOTARIALNI_PCT,
     STROITELSTVO_KOEF, STROITELSTVO_OPIS,
 )
-from utils.styles import format_eur, format_pct
+from utils.styles import format_eur, format_pct, section_label
 from utils.calculations import mesechna_vnоska
 
 ALL_CITIES = get_all_cities()
@@ -72,7 +72,7 @@ def render():
     # ═══════════════════════════════════════════════════════════════════════
     # СЕКЦИЯ А — ВХОДНИ ДАННИ
     # ═══════════════════════════════════════════════════════════════════════
-    st.markdown("### А. Данни за имота")
+    st.markdown(section_label("А. Данни за имота"), unsafe_allow_html=True)
 
     # ── ВИД НА ИМОТА ──────────────────────────────────────────────────────
     current_vid = im.get("vid_imot", "2-стаен")
@@ -190,7 +190,7 @@ def render():
     # ═══════════════════════════════════════════════════════════════════════
     # СЕКЦИЯ Б — ФИНАНСИРАНЕ
     # ═══════════════════════════════════════════════════════════════════════
-    st.markdown("### Б. Финансиране")
+    st.markdown(section_label("Б. Финансиране"), unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -233,7 +233,7 @@ def render():
     # СЕКЦИЯ В — ПАЗАРНА СПРАВКА ПО КВАРТАЛ
     # ═══════════════════════════════════════════════════════════════════════
     st.markdown("---")
-    st.markdown("### В. Пазарна справка")
+    st.markdown(section_label("В. Пазарна справка"), unsafe_allow_html=True)
 
     # Пазарната средна се коригира по тип строителство
     pazarna_baza     = get_avg_price(im["grad"], im["zona"])
@@ -345,7 +345,7 @@ def render():
     # ОБОБЩЕНИЕ
     # ═══════════════════════════════════════════════════════════════════════
     st.markdown("---")
-    st.markdown("### 📋 Обобщение на имота")
+    st.markdown(section_label("📋 Обобщение на имота"), unsafe_allow_html=True)
 
     r1, r2, r3, r4, r5 = st.columns(5)
     with r1:

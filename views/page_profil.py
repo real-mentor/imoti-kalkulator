@@ -139,7 +139,7 @@ def render():
         potencial_color = "#c9a84c" if total_potencial >= 80000 else "#fc8181"
         st.markdown(
             f"""
-            <div class="rm-card-gold" style="text-align:center;padding:1.5rem">
+            <div class="rm-card" style="text-align:center;padding:1.5rem">
                 <p style="color:#9ca3af;font-size:0.85rem;margin:0 0 0.25rem 0">ТВОЯТ ИНВЕСТИЦИОНЕН ПОТЕНЦИАЛ</p>
                 <p style="color:{potencial_color};font-size:2.5rem;font-weight:700;margin:0">
                     {format_eur(total_potencial)}

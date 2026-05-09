@@ -13,9 +13,9 @@ def render():
             """
             <div style="text-align:center;padding:2rem 0 1.5rem 0">
                 <p style="font-size:2.5rem;margin:0">🏠</p>
-                <h1 style="color:#c9a84c;font-size:1.8rem;margin:0.25rem 0 0 0">Real Mentor</h1>
-                <p style="color:#9ca3af;font-size:0.9rem;margin:0.25rem 0 0 0">
-                    Калкулатор за имотни инвестиции в България
+                <h1 style="color:#e8eaf0;font-size:1.8rem;margin:0.25rem 0 0 0">Real Mentor</h1>
+                <p style="color:#c9a84c;font-size:0.85rem;font-weight:600;letter-spacing:0.06em;margin:0.3rem 0 0 0">
+                    ОТ 0 ДО ПЪРВИЯ ИМОТ
                 </p>
             </div>
             """,
@@ -123,6 +123,6 @@ def render():
         # Footer
         st.markdown(
             '<p style="color:#374151;font-size:0.7rem;text-align:center;margin-top:2rem">'
-            'Real Mentor · 2026 · Данните са защитени с Supabase RLS</p>',
+            '© 2026 Real Mentor. Всички права запазени.</p>',
             unsafe_allow_html=True,
         )

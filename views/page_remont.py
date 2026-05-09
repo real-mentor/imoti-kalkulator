@@ -6,14 +6,8 @@ import plotly.graph_objects as go
 import pandas as pd
 from datetime import date, timedelta
 
-from utils.styles import format_eur, DARK_THEME_CSS
+from utils.styles import format_eur, PLOTLY_DARK
 from utils.market_data import REMONT_RAZKHODI, REMONT_REZERV_PCT
-
-PLOTLY_DARK = {
-    "paper_bgcolor": "rgba(0,0,0,0)",
-    "plot_bgcolor": "rgba(0,0,0,0)",
-    "font": {"color": "#e8eaf0", "family": "sans-serif"},
-}
 
 FAZI_REMONT = [
     {

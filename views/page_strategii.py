@@ -16,13 +16,7 @@ from utils.calculations import (
 )
 from utils.price_model import kapital_pechalba, badeshta_cena, meseci_do_akt16
 from utils.recommendation import preporycha_strategia, risk_badge
-from utils.styles import format_eur, format_pct, badge
-
-PLOTLY_DARK = {
-    "paper_bgcolor": "rgba(0,0,0,0)",
-    "plot_bgcolor": "rgba(0,0,0,0)",
-    "font": {"color": "#e8eaf0", "family": "sans-serif"},
-}
+from utils.styles import format_eur, format_pct, badge, PLOTLY_DARK
 
 
 def _risk_emoji(risk: str) -> str:

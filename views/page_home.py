@@ -25,7 +25,7 @@ def render():
     # Описание
     st.markdown(
         """
-        <div class="rm-card-gold">
+        <div class="rm-card">
         <p style="color:#e8eaf0;font-size:0.95rem;line-height:1.7;margin:0">
             Инструментът изчислява и сравнява <strong style="color:#c9a84c">7 инвестиционни стратегии</strong>
             за всеки конкретен имот в България — от покупка на зелено до Fix &amp; Flip и Buy &amp; Hold.
