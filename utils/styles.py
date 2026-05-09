@@ -2,6 +2,7 @@
 CSS стилове — премиум тъмна тема.
 Злато само за 1-2 ключови елемента на страница.
 """
+from __future__ import annotations
 
 DARK_THEME_CSS = """
 <style>

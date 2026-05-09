@@ -39,7 +39,13 @@
       "Bash(curl -s -A \"Mozilla/5.0 \\(Macintosh; Intel Mac OS X 10_15_7\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/120.0.0.0 Safari/537.36\" -L \"https://www.imot.bg\")",
       "Bash(curl -s -A \"Mozilla/5.0 \\(Macintosh; Intel Mac OS X 10_15_7\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/120.0.0.0 Safari/537.36\" -L \"https://www.imot.bg/search/prodazhbi\")",
       "Bash(curl -s \"https://www.imot.bg/jss/scripts.js?691\")",
-      "Bash(curl *)"
+      "Bash(curl *)",
+      "Bash(tar -xjf /tmp/dejavu.tar.bz2 -C /tmp/)",
+      "Bash(cp /tmp/dejavu-fonts-ttf-2.37/ttf/DejaVuSans.ttf /Users/teodorboev/Desktop/imoti-kalkulator-v2/fonts/)",
+      "Bash(cp /tmp/dejavu-fonts-ttf-2.37/ttf/DejaVuSans-Bold.ttf /Users/teodorboev/Desktop/imoti-kalkulator-v2/fonts/)",
+      "Bash(open *)",
+      "Bash(pip index *)",
+      "Bash(pip install *)"
     ]
   }
 }
