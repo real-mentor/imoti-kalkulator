@@ -25,6 +25,14 @@ def _risk_emoji(risk: str) -> str:
     return m.get(risk, "⚪")
 
 
+def _annualized_roi(pechalba: float, vlozhenie: float, srok_mes: float) -> float:
+    """Годишна CAGR на вложения собствен капитал."""
+    if vlozhenie <= 0 or srok_mes <= 0:
+        return 0.0
+    years = srok_mes / 12
+    return ((1 + pechalba / vlozhenie) ** (1 / years) - 1) * 100
+
+
 def render():
     im = st.session_state.imot
     profil = st.session_state.profil
@@ -65,13 +73,14 @@ def render():
             notarialni_pct=notarialni_pct, prodajbeni_razkhodi_pct=0.025,
         )
         nachaln = samoych_eur + notarialni_eur
+        srok = meseci_do_akt16(etap_name)
         return {
             "ime": f"{'🏗️ Покупка на зелено' if 'зелено' in etap_name else '📋 Преди разрешение'}",
             "etap": etap_name,
             "vlozhenie": nachaln,
             "pechalba": rez["brutna_pechalba"],
-            "roi_pct": rez["roi_pct"],
-            "srok_mes": meseci_do_akt16(etap_name),
+            "roi_pct": _annualized_roi(rez["brutna_pechalba"], nachaln, srok),
+            "srok_mes": srok,
             "risk": RISK_ETAP.get(etap_name, "Среден"),
             "detayli": rez,
         }
@@ -81,20 +90,24 @@ def render():
 
     # — С3: Акт 14/15 —
     def strat_akt(etap_name: str) -> dict:
-        rez = kapital_pechalba(pokupna, etap_name, meseci_do_akt16(etap_name) / 12, notarialni_pct=notarialni_pct)
+        srok = meseci_do_akt16(etap_name)
+        rez = kapital_pechalba(pokupna, etap_name, srok / 12, notarialni_pct=notarialni_pct)
         nachaln = samoych_eur + notarialni_eur
         return {
             "ime": f"🧱 {etap_name}",
             "etap": etap_name,
             "vlozhenie": nachaln,
             "pechalba": rez["brutna_pechalba"],
-            "roi_pct": rez["roi_pct"],
-            "srok_mes": meseci_do_akt16(etap_name),
+            "roi_pct": _annualized_roi(rez["brutna_pechalba"], nachaln, srok),
+            "srok_mes": srok,
             "risk": RISK_ETAP.get(etap_name, "Среден"),
             "detayli": rez,
         }
 
     s3 = strat_akt("Акт 14 (груб строеж)")
+
+    # — Buy & Hold база (преизползвана от С4 и С6) —
+    bh = buy_hold_analiz(pokupna, etap, naem, samoych_pct, lihva, srok_god, notarialni_pct, remont, max_godini=10)
 
     # — С4: Наем —
     noi_val = noi(naem, pokupna)
@@ -102,14 +115,15 @@ def render():
     coc = cash_on_cash(naem, pokupna, vnоska, samoych_eur + notarialni_eur + remont)
     mes_cf = mesecen_pаricen_potok(naem, pokupna, vnоska)
     pb = payback_period(samoych_eur, notarialni_eur, remont, mes_cf)
+    bh10 = bh["po_godini"][10]
 
     s4 = {
         "ime": "🏠 Покупка с цел наем",
         "etap": etap,
         "vlozhenie": samoych_eur + notarialni_eur + remont,
-        "pechalba": (noi_val * 10) if noi_val > 0 else 0,  # 10 год. NOI
-        "roi_pct": coc,
-        "srok_mes": 12,
+        "pechalba": bh10["kapitalov_rezultat"],
+        "roi_pct": bh10["godishen_roi"],
+        "srok_mes": 120,
         "risk": "Нисък",
         "detayli": {
             "noi": noi_val,
@@ -129,21 +143,20 @@ def render():
         "etap": etap,
         "vlozhenie": ff["obshto_vlozhenie"],
         "pechalba": ff["brutna_pechalba"],
-        "roi_pct": ff["roi_pct"],
+        "roi_pct": _annualized_roi(ff["brutna_pechalba"], ff["obshto_vlozhenie"], ff["obshto_srok_mes"]),
         "srok_mes": ff["obshto_srok_mes"],
         "risk": "Среден-Висок",
         "detayli": ff,
     }
 
     # — С6: Buy & Hold 7 год. —
-    bh = buy_hold_analiz(pokupna, etap, naem, samoych_pct, lihva, srok_god, notarialni_pct, remont, max_godini=10)
     bh7 = bh["po_godini"][7]
     s6 = {
         "ime": "📈 Buy & Hold (7 год.)",
         "etap": etap,
         "vlozhenie": bh["nachaln_vlozhenie"],
         "pechalba": bh7["kapitalov_rezultat"],
-        "roi_pct": bh7["roi_pct"],
+        "roi_pct": bh7["godishen_roi"],
         "srok_mes": 84,
         "risk": "Нисък",
         "detayli": bh,
@@ -152,17 +165,17 @@ def render():
     # — С7: Ново готов имот —
     noi_novo = noi(naem, pokupna)
     coc_novo = cash_on_cash(naem, pokupna, vnоska, samoych_eur + notarialni_eur)
-    bh_novo = buy_hold_analiz(pokupna, "Акт 16 (готов нов)", naem, samoych_pct, lihva, srok_god, notarialni_pct, 0.0, 10)
+    bh_novo = buy_hold_analiz(pokupna, etap, naem, samoych_pct, lihva, srok_god, notarialni_pct, 0.0, 10)
     bh_novo_5 = bh_novo["po_godini"][5]
     s7 = {
         "ime": "🏢 Ново стр-во — готов",
-        "etap": "Акт 16 (готов нов)",
+        "etap": etap,
         "vlozhenie": samoych_eur + notarialni_eur,
         "pechalba": bh_novo_5["kapitalov_rezultat"],
-        "roi_pct": coc_novo,
+        "roi_pct": bh_novo_5["godishen_roi"],
         "srok_mes": 60,
         "risk": "Нисък",
-        "detayli": {"noi": noi_novo, "cash_on_cash": coc_novo, "bh": bh_novo},
+        "detayli": {"noi": noi_novo, "cash_on_cash": coc_novo, "bh": bh_novo, "etap": etap},
     }
 
     strategii = [s1, s2, s3, s4, s5, s6, s7]
@@ -173,14 +186,14 @@ def render():
 
     for i, s in enumerate(strategii):
         risk_e = _risk_emoji(s["risk"])
-        with st.expander(f"{s['ime']}  ·  ROI {s['roi_pct']:.1f}%  ·  Риск: {risk_e} {s['risk']}", expanded=(i == 3)):
+        with st.expander(f"{s['ime']}  ·  ROI {s['roi_pct']:.1f}%/г  ·  Риск: {risk_e} {s['risk']}", expanded=(i == 3)):
             c1, c2, c3, c4 = st.columns(4)
             with c1:
                 st.metric("Вложение", format_eur(s["vlozhenie"]))
             with c2:
                 st.metric("Очаквана печалба", format_eur(s["pechalba"]))
             with c3:
-                st.metric("ROI", format_pct(s["roi_pct"]))
+                st.metric("ROI/г (CAGR)", format_pct(s["roi_pct"]))
             with c4:
                 mes = s["srok_mes"]
                 st.metric("Срок", f"{mes} мес. ({mes//12} год. {mes%12} мес.)" if mes > 0 else "Веднага")
@@ -199,7 +212,7 @@ def render():
                     | Разходи покупка | {format_eur(det['razkhodi_pokupka'])} |
                     | Разходи продажба | {format_eur(det['razkhodi_prodajba'])} |
                     | Брутна печалба | {format_eur(det['brutna_pechalba'])} |
-                    | Годишен ROI | {det['godishen_roi']:.1f}% |
+                    | ROI %/г (CAGR на equity) | {s['roi_pct']:.1f}% |
                     """
                 )
                 st.warning(f"⚠️ **Риск {s['risk']}** — Строителят може да забави или фалира. Проверявай репутацията му!")
@@ -213,7 +226,7 @@ def render():
                     | Строителен прогрес | ×{PROGRES_KOEFICIENTI.get(s['etap'], 1):.2f} |
                     | Очаквана Акт 16 цена | {format_eur(det['badeshta_cena'])} |
                     | Брутна печалба | {format_eur(det['brutna_pechalba'])} |
-                    | ROI | {det['roi_pct']:.1f}% |
+                    | ROI %/г (CAGR) | {s['roi_pct']:.1f}% |
                     """
                 )
 
@@ -262,7 +275,7 @@ def render():
                         "Натрупан наем": format_eur(g_data["natrupen_naem"]),
                         "Остатък кредит": format_eur(g_data["ostatok_kredit"]),
                         "Капиталов резултат": format_eur(g_data["kapitalov_rezultat"]),
-                        "ROI %": format_pct(g_data["roi_pct"]),
+                        "CAGR %/г": format_pct(g_data["godishen_roi"]),
                     })
                 st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
 
@@ -285,6 +298,25 @@ def render():
                     margin=dict(l=0, r=0, t=20, b=0),
                 )
                 st.plotly_chart(fig, use_container_width=True)
+
+            elif i == 6:  # Ново стр-во — готов
+                bh_det = det["bh"]
+                st.markdown("**Buy & Hold прогноза (5 год.):**")
+                rows = []
+                for g_data in bh_det["po_godini"][1:6]:
+                    rows.append({
+                        "Година": g_data["godina"],
+                        "Стойност имот": format_eur(g_data["stojnost_imot"]),
+                        "Натрупан наем": format_eur(g_data["natrupen_naem"]),
+                        "Остатък кредит": format_eur(g_data["ostatok_kredit"]),
+                        "Капиталов резултат": format_eur(g_data["kapitalov_rezultat"]),
+                        "CAGR %/г": format_pct(g_data["godishen_roi"]),
+                    })
+                st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+                st.caption(
+                    f"Cash-on-Cash (само наем): {det['cash_on_cash']:.2f}%/г  ·  "
+                    f"NOI: {format_eur(det['noi'])}/год.  ·  Етап: {det['etap']}"
+                )
 
     # ═══════════════════════════════════════════════════
     # СРАВНИТЕЛНА ТАБЛИЦА
@@ -311,13 +343,14 @@ def render():
             "Стратегия": s["ime"],
             "Вложение €": f"{s['vlozhenie']:,.0f}",
             "Очакв. печалба €": f"{s['pechalba']:,.0f}",
-            "ROI %": f"{s['roi_pct']:.1f}%",
+            "ROI %/г": f"{s['roi_pct']:.1f}%",
             "Срок (мес)": s["srok_mes"],
             "Риск": f"{_risk_emoji(s['risk'])} {s['risk']}",
             "Маркери": "  ".join(marks) if marks else "—",
         })
 
     st.dataframe(pd.DataFrame(tbl_rows), use_container_width=True, hide_index=True)
+    st.caption("ROI %/г = годишна CAGR на вложения собствен капитал (поскъпване + наем)")
 
     # ═══════════════════════════════════════════════════
     # ГРАФИКИ
@@ -333,12 +366,12 @@ def render():
             x=[s["ime"].split(" ", 1)[1] if " " in s["ime"] else s["ime"] for s in strategii],
             y=[s["roi_pct"] for s in strategii],
             marker_color=colors,
-            text=[f"{s['roi_pct']:.1f}%" for s in strategii],
+            text=[f"{s['roi_pct']:.1f}%/г" for s in strategii],
             textposition="outside",
         ))
         fig_roi.update_layout(
             **PLOTLY_DARK,
-            title="ROI % по стратегии",
+            title="ROI %/г по стратегии (CAGR)",
             height=350,
             xaxis=dict(tickangle=-30, gridcolor="#2d3151"),
             yaxis=dict(title="%", gridcolor="#2d3151"),
