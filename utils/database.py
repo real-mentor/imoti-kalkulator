@@ -48,6 +48,9 @@ def get_client():
     """Singleton Supabase клиент."""
     global _client
     if _client is None:
+        import streamlit as st
+        print("SUPABASE_URL:", st.secrets.get("SUPABASE_URL", "NOT FOUND")[:30] + "...")
+        print("SUPABASE_KEY:", st.secrets.get("SUPABASE_KEY", "NOT FOUND")[:20] + "...")
         from supabase import create_client
         url, key = _get_supabase_config()
         if not url or not key or "тук_ще_сложа" in url:
