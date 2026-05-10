@@ -10,6 +10,7 @@ from typing import Optional
 from utils.database import save_calculation
 from utils.market_data import (
     PROGRES_KOEFICIENTI, RISK_ETAP, INFLACIYA_GOD, PAZARNO_POSKAPVANE_GOD,
+    BUY_HOLD_OPERATIVNI_PCT, ESS_TAKS_GOD,
 )
 from utils.calculations import (
     mesechna_vnоska, noi, cap_rate, cash_on_cash,
@@ -232,13 +233,21 @@ def render():
 
             elif i == 3:  # Наем
                 mes_cf = det["mes_cf"]
-                cf_color = "#48bb78" if mes_cf >= 0 else "#fc8181"
                 pb = det["payback"]
+                god_razkhodi_mes = pokupna * (
+                    BUY_HOLD_OPERATIVNI_PCT["remont_rez"]
+                    + BUY_HOLD_OPERATIVNI_PCT["danuk_imot"]
+                    + BUY_HOLD_OPERATIVNI_PCT["zastrakhovka"]
+                ) / 12 + naem * BUY_HOLD_OPERATIVNI_PCT["ess_upravl"] + ESS_TAKS_GOD / 12
+                naem_neto_mes = naem * (1 - BUY_HOLD_OPERATIVNI_PCT["vacancy"]) - god_razkhodi_mes
                 st.markdown(
                     f"""
                     | Показател | Стойност |
                     |-----------|---------|
-                    | Месечен наем | {format_eur(naem)} |
+                    | Брутен месечен наем | {format_eur(naem)} |
+                    | Vacancy (5%) | -{format_eur(naem * BUY_HOLD_OPERATIVNI_PCT['vacancy'])} |
+                    | Оперативни разходи/мес | -{format_eur(god_razkhodi_mes)} |
+                    | **Нетен наем/мес (NOI/12)** | **{format_eur(naem_neto_mes)}** |
                     | Месечна ипотека | {format_eur(det['vnоska'])} |
                     | NOI (годишен) | {format_eur(det['noi'])} |
                     | Cap Rate | {det['cap_rate']:.2f}% |
@@ -266,6 +275,17 @@ def render():
                 )
 
             elif i == 5:  # Buy & Hold
+                # Разбивка наем/разходи
+                bh_vn = det.get("mesechna_vnоska", 0)
+                neto_mes = det.get("god_naem_neto", 0) / 12
+                op_mes = det.get("operativni_razkhodi", 0) / 12
+                bc1, bc2, bc3, bc4 = st.columns(4)
+                bc1.metric("Брутен наем/мес", format_eur(det.get("mesecen_naem", naem)))
+                bc2.metric("Разходи/мес", f"-{format_eur(op_mes)}")
+                bc3.metric("Нетен наем/мес", format_eur(neto_mes),
+                           delta=("Положителен" if neto_mes >= 0 else "ОТРИЦАТЕЛЕН"))
+                bc4.metric("Месечна вноска", format_eur(bh_vn) if bh_vn > 0 else "100% собств.")
+
                 st.markdown("**Прогноза по години:**")
                 rows = []
                 for g_data in det["po_godini"][1:]:
@@ -301,6 +321,17 @@ def render():
 
             elif i == 6:  # Ново стр-во — готов
                 bh_det = det["bh"]
+                # Разбивка наем/разходи
+                bh7_vn = bh_det.get("mesechna_vnоska", 0)
+                neto7_mes = bh_det.get("god_naem_neto", 0) / 12
+                op7_mes = bh_det.get("operativni_razkhodi", 0) / 12
+                s7c1, s7c2, s7c3, s7c4 = st.columns(4)
+                s7c1.metric("Брутен наем/мес", format_eur(bh_det.get("mesecen_naem", naem)))
+                s7c2.metric("Разходи/мес", f"-{format_eur(op7_mes)}")
+                s7c3.metric("Нетен наем/мес", format_eur(neto7_mes),
+                            delta=("Положителен" if neto7_mes >= 0 else "ОТРИЦАТЕЛЕН"))
+                s7c4.metric("Месечна вноска", format_eur(bh7_vn) if bh7_vn > 0 else "100% собств.")
+
                 st.markdown("**Buy & Hold прогноза (5 год.):**")
                 rows = []
                 for g_data in bh_det["po_godini"][1:6]:
@@ -315,7 +346,7 @@ def render():
                 st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
                 st.caption(
                     f"Cash-on-Cash (само наем): {det['cash_on_cash']:.2f}%/г  ·  "
-                    f"NOI: {format_eur(det['noi'])}/год.  ·  Етап: {det['etap']}"
+                    f"Етап: {det['etap']}"
                 )
 
     # ═══════════════════════════════════════════════════

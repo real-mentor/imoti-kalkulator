@@ -271,6 +271,9 @@ def buy_hold_analiz(
             "godishen_roi": godishen_roi,
         })
 
+    god_naem_bruto = mesecen_naem * 12
+    god_naem_neto = god_naem_bruto * (1 - vac) - operativni_god
+
     return {
         "pokupna": pokupna,
         "samoychastie": samoych,
@@ -280,6 +283,9 @@ def buy_hold_analiz(
         "nachaln_vlozhenie": samoych + notarialni + remont_eur,
         "mesechna_vnоska": vnоska,
         "mesecen_naem": mesecen_naem,
+        "god_naem_bruto": god_naem_bruto,
+        "god_naem_neto": god_naem_neto,
+        "operativni_razkhodi": operativni_god,
         "po_godini": rezultati,
     }
 

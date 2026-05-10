@@ -1,6 +1,7 @@
 """
 Модел за бъдеща цена на имот.
-Формула: Бъдеща_цена = Покупна × (1+инфл)^г × (1+пазар)^г × прогрес_коеф
+Формула: Бъдеща_цена = Покупна × (1+пазарен_ръст)^г × прогрес_коеф
+PAZARNO_POSKAPVANE_GOD = 7% е НОМИНАЛЕН ценови ръст (реален + инфлация).
 """
 from __future__ import annotations
 from typing import List, Optional
@@ -25,14 +26,13 @@ def badeshta_cena(
     pokupna           — покупна цена в €
     etap              — строителен етап (ключ от PROGRES_KOEFICIENTI)
     godini            — хоризонт в години
-    inflaciya         — годишна инфлация (None → пазарна стойност)
-    pazarno_poskapvane — годишен пазарен ръст (None → пазарна стойност)
+    pazarno_poskapvane — номинален годишен ценови ръст (None → PAZARNO_POSKAPVANE_GOD)
+    inflaciya          — запазен параметър за съвместимост, не се използва в цената
     """
-    inf = inflaciya if inflaciya is not None else INFLACIYA_GOD
     paz = pazarno_poskapvane if pazarno_poskapvane is not None else PAZARNO_POSKAPVANE_GOD
     progres = get_progres_koef(etap)
 
-    return pokupna * ((1 + inf) ** godini) * ((1 + paz) ** godini) * progres
+    return pokupna * ((1 + paz) ** godini) * progres
 
 
 def badeshta_cena_po_godini(
