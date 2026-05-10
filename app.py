@@ -44,7 +44,7 @@ def init_state():
             "izlozhenie": "Юг",
             "tip_stroitelstvo": "Ново строителство",  # Ново строителство | Монолит (2000–2010) | Старо — тухла / ЕПК | Старо — панел
             "etap": "Акт 16 (готов нов)",
-            "ochakvаn_naem": 650.0,
+            "ochakvаn_naem": 0.0,
             "remont_byudzhet": 0.0,
             "samoychastie_pct": 0.20,
             "lihva": 0.025,

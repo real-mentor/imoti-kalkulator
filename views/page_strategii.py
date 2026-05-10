@@ -42,6 +42,19 @@ def render():
     kvm = im["kvadraturi"]
     etap = im["etap"]
     naem = im["ochakvаn_naem"]
+
+    if naem <= 0:
+        st.markdown("# 📊 Сравнение на 7 стратегии")
+        st.warning(
+            "⚠️ **Въведи очакван месечен наем за по-точна калкулация.**  \n"
+            "Отиди в **Оценка на имот** и попълни полето 'Очакван месечен наем (€)' "
+            "на база собствено проучване на пазара."
+        )
+        if st.button("← Обратно към Оценка на имот"):
+            st.session_state.page = "imot"
+            st.rerun()
+        return
+
     remont = im["remont_byudzhet"]
     samoych_pct = im["samoychastie_pct"]
     lihva = im["lihva"]

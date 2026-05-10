@@ -171,10 +171,17 @@ def render():
         im["ochakvаn_naem"] = st.number_input(
             "Очакван месечен наем (€)",
             min_value=0.0, max_value=20000.0, step=25.0,
-            value=current_naem if current_naem > 0 else float(pazar_naem),
-            help=f"Пазарна референция: ~{format_eur(pazar_naem)}/мес за {im['grad']} / {im['zona']}",
+            value=current_naem,
+            help=(
+                f"Въведи реалистичен наем на база собствено проучване. "
+                f"Пазарна ориентировъчна стойност: ~{format_eur(pazar_naem)}/мес "
+                f"за {im['grad']} / {im['zona']}."
+            ),
         )
-        st.caption(f"Пазарна справка: ~{format_eur(pazar_naem)}/мес")
+        if im["ochakvаn_naem"] == 0:
+            st.warning("⚠️ Въведи очакван месечен наем за по-точна калкулация.")
+        else:
+            st.caption(f"Пазарна справка: ~{format_eur(pazar_naem)}/мес")
 
     with col2:
         if im["etap"] in RELEVANTEN_REMONT:
