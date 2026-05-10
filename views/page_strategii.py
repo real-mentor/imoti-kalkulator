@@ -93,6 +93,8 @@ def render():
             "etap": etap_name,
             "vlozhenie": nachaln,
             "pechalba": rez["brutna_pechalba"],
+            "pechalba_naem": 0.0,
+            "pechalba_poskapvane": rez["brutna_pechalba"],
             "roi_pct": _annualized_roi(rez["brutna_pechalba"], nachaln, srok),
             "srok_mes": srok,
             "risk": RISK_ETAP.get(etap_name, "Среден"),
@@ -112,6 +114,8 @@ def render():
             "etap": etap_name,
             "vlozhenie": nachaln,
             "pechalba": rez["brutna_pechalba"],
+            "pechalba_naem": 0.0,
+            "pechalba_poskapvane": rez["brutna_pechalba"],
             "roi_pct": _annualized_roi(rez["brutna_pechalba"], nachaln, srok),
             "srok_mes": srok,
             "risk": RISK_ETAP.get(etap_name, "Среден"),
@@ -136,6 +140,8 @@ def render():
         "etap": etap,
         "vlozhenie": samoych_eur + notarialni_eur + remont,
         "pechalba": bh10["kapitalov_rezultat"],
+        "pechalba_naem": bh10["natrupen_naem"],
+        "pechalba_poskapvane": bh10["kapitalov_rezultat"] - bh10["natrupen_naem"],
         "roi_pct": bh10["godishen_roi"],
         "srok_mes": 120,
         "risk": "Нисък",
@@ -157,6 +163,8 @@ def render():
         "etap": etap,
         "vlozhenie": ff["obshto_vlozhenie"],
         "pechalba": ff["brutna_pechalba"],
+        "pechalba_naem": 0.0,
+        "pechalba_poskapvane": ff["brutna_pechalba"],
         "roi_pct": _annualized_roi(ff["brutna_pechalba"], ff["obshto_vlozhenie"], ff["obshto_srok_mes"]),
         "srok_mes": ff["obshto_srok_mes"],
         "risk": "Среден-Висок",
@@ -170,6 +178,8 @@ def render():
         "etap": etap,
         "vlozhenie": bh["nachaln_vlozhenie"],
         "pechalba": bh7["kapitalov_rezultat"],
+        "pechalba_naem": bh7["natrupen_naem"],
+        "pechalba_poskapvane": bh7["kapitalov_rezultat"] - bh7["natrupen_naem"],
         "roi_pct": bh7["godishen_roi"],
         "srok_mes": 84,
         "risk": "Нисък",
@@ -186,6 +196,8 @@ def render():
         "etap": etap,
         "vlozhenie": samoych_eur + notarialni_eur,
         "pechalba": bh_novo_5["kapitalov_rezultat"],
+        "pechalba_naem": bh_novo_5["natrupen_naem"],
+        "pechalba_poskapvane": bh_novo_5["kapitalov_rezultat"] - bh_novo_5["natrupen_naem"],
         "roi_pct": bh_novo_5["godishen_roi"],
         "srok_mes": 60,
         "risk": "Нисък",
@@ -211,6 +223,23 @@ def render():
             with c4:
                 mes = s["srok_mes"]
                 st.metric("Срок", f"{mes} мес. ({mes//12} год. {mes%12} мес.)" if mes > 0 else "Веднага")
+
+            # Разбивка на печалбата: наем vs поскъпване
+            pn = s.get("pechalba_naem", 0.0)
+            pp = s.get("pechalba_poskapvane", s["pechalba"])
+            if s["pechalba"] != 0:
+                naem_share = round(pn / s["pechalba"] * 100)
+                posk_share = 100 - naem_share
+            else:
+                naem_share = posk_share = 0
+            ps1, ps2, ps3 = st.columns(3)
+            with ps1:
+                st.metric("Печалба от наем", format_eur(pn))
+            with ps2:
+                st.metric("Печалба от поскъпване", format_eur(pp))
+            with ps3:
+                st.metric("Дял наем / поскъпване", f"{naem_share}% / {posk_share}%")
+            st.divider()
 
             det = s["detayli"]
 
@@ -269,6 +298,27 @@ def render():
                     | Срок за пълна възвр. | {f"{pb:.0f} мес. ({pb/12:.1f} год.)" if pb else "Отрицателен CF"} |
                     """
                 )
+
+                # Cap Rate оценка
+                cr_val = det["cap_rate"]
+                if cr_val >= 6:
+                    st.success(f"✅ Cap Rate {cr_val:.2f}% — Отлична наемна доходност")
+                elif cr_val >= 4:
+                    st.warning(f"🟡 Cap Rate {cr_val:.2f}% — Приемлива наемна доходност. По-голямата част от печалбата идва от поскъпване.")
+                else:
+                    posk_pct = round((s4["pechalba_poskapvane"] / s4["pechalba"]) * 100) if s4["pechalba"] > 0 else 0
+                    st.error(
+                        f"🔴 Cap Rate {cr_val:.2f}% — Слаба наемна доходност. "
+                        f"{posk_pct}% от печалбата идва от поскъпване, само {100 - posk_pct}% от наем. "
+                        f"Тази стратегия е по-скоро залог на ценовия ръст, не на наемен доход."
+                    )
+
+                # Предупреждение за дълъг срок на възвращаемост
+                if pb and pb > 240:
+                    st.warning(
+                        f"⚠️ Срок за пълна възвращаемост: **{pb:.0f} мес. ({pb/12:.1f} год.)** — над 20 години! "
+                        f"Помисли дали наемният доход покрива рисковете при толкова дълъг хоризонт."
+                    )
 
             elif i == 4:  # Fix & Flip
                 st.markdown(
@@ -386,7 +436,9 @@ def render():
         tbl_rows.append({
             "Стратегия": s["ime"],
             "Вложение €": f"{s['vlozhenie']:,.0f}",
-            "Очакв. печалба €": f"{s['pechalba']:,.0f}",
+            "Наем €": f"{s.get('pechalba_naem', 0):,.0f}",
+            "Поскъпване €": f"{s.get('pechalba_poskapvane', s['pechalba']):,.0f}",
+            "Обща печалба €": f"{s['pechalba']:,.0f}",
             "ROI %/г": f"{s['roi_pct']:.1f}%",
             "Срок (мес)": s["srok_mes"],
             "Риск": f"{_risk_emoji(s['risk'])} {s['risk']}",
