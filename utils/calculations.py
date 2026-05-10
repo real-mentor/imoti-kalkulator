@@ -18,8 +18,6 @@ from utils.market_data import (
     FIX_FLIP_ROI_OTLICHNA,
     FIX_FLIP_ROI_DOBRA,
     FIX_FLIP_ROI_PRIEMLIVА,
-    INFLACIYA_GOD,
-    PAZARNO_POSKAPVANE_GOD,
     REMONT_REZERV_PCT,
     BUY_HOLD_OPERATIVNI_PCT,
 )
@@ -221,31 +219,34 @@ def buy_hold_analiz(
     notarialni_pct: float = 0.03,
     remont_eur: float = 0.0,
     max_godini: int = 10,
-    inflaciya: Optional[float] = None,
     pazarno_poskapvane: Optional[float] = None,
 ) -> Dict[str, Any]:
     """
     Buy & Hold анализ — стойност, натрупан наем, капиталов резултат по години.
+
+    Ценови ръст: PAZARNO_POSKAPVANE_GOD = 7% номинален (инфлацията е включена).
+    Оперативни разходи от стойността на имота:
+      1.0% ремонтен резерв + 0.1% данък имот + 0.2% застраховка = 1.3%/год
     """
     samoych = pokupna * samoychastie_pct
     kredit = pokupna * (1 - samoychastie_pct)
     notarialni = pokupna * notarialni_pct
     vnоska = mesechna_vnоska(kredit, lihva, srok_god)
 
-    inf = inflaciya if inflaciya is not None else INFLACIYA_GOD
-    paz = pazarno_poskapvane if pazarno_poskapvane is not None else PAZARNO_POSKAPVANE_GOD
-
-    # Оперативни разходи (% от наема + фиксирани)
-    vac = BUY_HOLD_OPERATIVNI_PCT["vacancy"]
+    # Разходи за притежание: 1.3% от стойността на имота + 2% от наема + €60/год ЕСС
+    vac = BUY_HOLD_OPERATIVNI_PCT["vacancy"]           # 5% незаетост
+    pct_imot = (
+        BUY_HOLD_OPERATIVNI_PCT["remont_rez"]          # 1.0% ремонтен резерв
+        + BUY_HOLD_OPERATIVNI_PCT["danuk_imot"]        # 0.1% данък имот
+        + BUY_HOLD_OPERATIVNI_PCT["zastrakhovka"]      # 0.2% застраховка
+    )                                                   # = 1.3% от pokupna/год
     operativni_god = (
-        pokupna * (BUY_HOLD_OPERATIVNI_PCT["remont_rez"]
-                   + BUY_HOLD_OPERATIVNI_PCT["danuk_imot"]
-                   + BUY_HOLD_OPERATIVNI_PCT["zastrakhovka"])
-        + mesecen_naem * 12 * BUY_HOLD_OPERATIVNI_PCT["ess_upravl"]
-        + ESS_TAKS_GOD
+        pokupna * pct_imot
+        + mesecen_naem * 12 * BUY_HOLD_OPERATIVNI_PCT["ess_upravl"]  # 2% от наема
+        + ESS_TAKS_GOD                                                 # €60/год
     )
 
-    stojnosti = badeshta_cena_po_godini(pokupna, etap, max_godini, inf, paz)
+    stojnosti = badeshta_cena_po_godini(pokupna, etap, max_godini, pazarno_poskapvane)
 
     rezultati = []
     natrupen_naem = 0.0
