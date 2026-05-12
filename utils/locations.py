@@ -1,299 +1,323 @@
 """
 Подробна структура на локации — България.
-Градове, квартали/райони, средни цени продажби и наеми (Q1 2026).
+Градове, квартали/райони, средни цени продажби и наеми.
+
+avg_sqm  = средна цена €/кв.м за НОВО СТРОИТЕЛСТВО (STROITELSTVO_KOEF["Ново строителство"] = 1.00)
+           По-стари типове строителство се дисконтират с коефициент в market_data.py.
+rent_2br = средна наемна цена двустаен (~65 кв.м) €/мес; среднопазарна без луксозно обзавеждане.
+
+ВАЖНО: avg_sqm е листингова/офертна цена (imot.bg / alo.bg), ~5-10% над реалната сделка.
+Използва се като пазарна референтна точка, консистентна с това, което купувачите виждат.
 
 Типове зони:
-  luxury   — елитни квартали (вили, нов лукс)  >4000 €/кв.м
-  premium  — предпочитани/централни           2800-4000 €/кв.м
-  mid_high — добри жилищни                    2000-2800 €/кв.м
-  mid      — масов сегмент                    1300-2000 €/кв.м
-  economy  — достъпни                          800-1300 €/кв.м
-  suburb   — покрайнини/вилни зони              500-900 €/кв.м
+  luxury   — елитни централни квартали / лукс ново строителство  >4000 €/кв.м
+  premium  — предпочитани/централни                              2800-4000 €/кв.м
+  mid_high — добри жилищни                                       2000-2800 €/кв.м
+  mid      — масов сегмент                                       1400-2000 €/кв.м
+  economy  — достъпни                                             900-1400 €/кв.м
+  suburb   — покрайнини/вилни зони                                500-900  €/кв.м
+
+ИЗТОЧНИЦИ И ДАТИ:
+  София    : alo.bg средни цени 11.05.2026; veldiks.bg анализ Q1 2026;
+             investor.bg пазар на жилища по квартали; finansovsuvet.com Q1 2026
+  Пловдив  : marica.bg (2026 прогноза, реални данни Q1 2026); alo.bg 11.05.2026
+  Варна    : varnenskoutro.bg Q4 2025/Q1 2026; alo.bg 11.05.2026; meduzata.com Feb 2026
+  Бургас   : bmt-news.com 2025; alo.bg 11.05.2026
+  Останали : оценъчни стойности на база NSI и регионален пазарен анализ Q1 2026
+
+ПОСЛЕДНО ОБНОВЯВАНЕ: 2026-05-12
 """
 from __future__ import annotations
 from typing import Dict, List, Tuple, Optional
 
 # ---------------------------------------------------------------------------
 # Тип: {grad: {kvartal: {"type": str, "avg_sqm": int, "rent_2br": int}}}
-# avg_sqm  = средна продажна цена €/кв.м
-# rent_2br = средна наемна цена двустаен €/мес
 # ---------------------------------------------------------------------------
 
 LOCATIONS: Dict[str, Dict] = {
 
     # ═══════════════════════════════════════════════════════════════════════
-    # СОФИЯ
+    # СОФИЯ  —  Последно обновяване: 2026-05-12
+    # Источник: alo.bg средни цени (листинг); veldiks.bg; investor.bg Q1 2026
+    # avg_sqm = ново строителство; alo.bg ask ≈ +5-10% над сделка
     # ═══════════════════════════════════════════════════════════════════════
     "София": {
-        "imotbg_id": "1",   # ID на локацията в imot.bg
+        "imotbg_id": "1",
         "zones": {
-            # ── ЛУКСОЗНИ ────────────────────────────────────────────────
-            "Бояна":                  {"type": "luxury",   "avg_sqm": 4800, "rent_2br": 1800},
-            "Драгалевци":             {"type": "luxury",   "avg_sqm": 4500, "rent_2br": 1600},
-            "Симеоново":              {"type": "luxury",   "avg_sqm": 4200, "rent_2br": 1500},
-            "Витоша":                 {"type": "luxury",   "avg_sqm": 4000, "rent_2br": 1400},
-            "Бистрица":               {"type": "luxury",   "avg_sqm": 3800, "rent_2br": 1300},
-            "Лозен":                  {"type": "luxury",   "avg_sqm": 3500, "rent_2br": 1200},
+            # ── ЛЮКС — централни квартали с ново строителство >4000 €/кв.м ───
+            "Докторски паметник":     {"type": "luxury",   "avg_sqm": 4200, "rent_2br": 1050},
+            "Иван Вазов":             {"type": "luxury",   "avg_sqm": 4400, "rent_2br": 1050},
+            "Изток":                  {"type": "luxury",   "avg_sqm": 4200, "rent_2br": 1000},
 
-            # ── PREMIUM ─────────────────────────────────────────────────
-            "Лозенец":                {"type": "premium",  "avg_sqm": 3900, "rent_2br": 1400},
-            "Докторски паметник":     {"type": "premium",  "avg_sqm": 4200, "rent_2br": 1500},
-            "Изток":                  {"type": "premium",  "avg_sqm": 3900, "rent_2br": 1400},
-            "Изгрев":                 {"type": "premium",  "avg_sqm": 3900, "rent_2br": 1400},
-            "Иван Вазов":             {"type": "premium",  "avg_sqm": 4000, "rent_2br": 1450},
-            "Яворов":                 {"type": "premium",  "avg_sqm": 3600, "rent_2br": 1250},
-            "Оборище":                {"type": "premium",  "avg_sqm": 3600, "rent_2br": 1250},
-            "Хладилника":             {"type": "premium",  "avg_sqm": 3400, "rent_2br": 1200},
-            "Изток":                  {"type": "premium",  "avg_sqm": 3400, "rent_2br": 1200},
-            "Медицинска академия":    {"type": "premium",  "avg_sqm": 3200, "rent_2br": 1150},
-            "Борово":                 {"type": "premium",  "avg_sqm": 3000, "rent_2br": 1050},
-            "Стрелбище":              {"type": "premium",  "avg_sqm": 3000, "rent_2br": 1050},
+            # ── PREMIUM — 2800-4000 €/кв.м ──────────────────────────────────
+            "Лозенец":                {"type": "premium",  "avg_sqm": 3850, "rent_2br": 900},
+            "Изгрев":                 {"type": "premium",  "avg_sqm": 3700, "rent_2br": 860},
+            "Яворов":                 {"type": "premium",  "avg_sqm": 3600, "rent_2br": 830},
+            "Оборище":                {"type": "premium",  "avg_sqm": 3500, "rent_2br": 810},
+            "Хладилника":             {"type": "premium",  "avg_sqm": 3400, "rent_2br": 800},
+            "Медицинска академия":    {"type": "premium",  "avg_sqm": 3300, "rent_2br": 780},
+            "Стрелбище":              {"type": "premium",  "avg_sqm": 2950, "rent_2br": 730},
+            "Борово":                 {"type": "premium",  "avg_sqm": 3100, "rent_2br": 750},
 
-            # ── MID-HIGH ────────────────────────────────────────────────
-            "Младост 1":              {"type": "mid_high", "avg_sqm": 2700, "rent_2br": 1000},
-            "Младост 2":              {"type": "mid_high", "avg_sqm": 2600, "rent_2br": 950},
-            "Младост 3":              {"type": "mid_high", "avg_sqm": 2550, "rent_2br": 930},
-            "Студентски град":        {"type": "mid_high", "avg_sqm": 2400, "rent_2br": 900},
-            "Красно село":            {"type": "mid_high", "avg_sqm": 2500, "rent_2br": 900},
-            "Триадица":               {"type": "mid_high", "avg_sqm": 2600, "rent_2br": 950},
-            "Дианабад":               {"type": "mid_high", "avg_sqm": 2400, "rent_2br": 880},
-            "Гео Милев":              {"type": "mid_high", "avg_sqm": 2500, "rent_2br": 900},
-            "Редута":                 {"type": "mid_high", "avg_sqm": 2300, "rent_2br": 850},
-            "Слатина":                {"type": "mid_high", "avg_sqm": 2200, "rent_2br": 820},
-            "Христо Смирненски":      {"type": "mid_high", "avg_sqm": 2200, "rent_2br": 800},
-            "Кръстова вада":          {"type": "mid_high", "avg_sqm": 2800, "rent_2br": 1000},
-            "Малинова долина":        {"type": "mid_high", "avg_sqm": 2700, "rent_2br": 980},
-            "Манастирски ливади":     {"type": "mid_high", "avg_sqm": 2600, "rent_2br": 950},
-            "Горна Баня":             {"type": "mid_high", "avg_sqm": 2400, "rent_2br": 880},
+            # ── MID-HIGH — 2000-2800 €/кв.м ─────────────────────────────────
+            # Витошки зони: alo.bg ~2500-2800 ask за нов апартамент
+            "Бояна":                  {"type": "mid_high", "avg_sqm": 2700, "rent_2br": 720},
+            "Драгалевци":             {"type": "mid_high", "avg_sqm": 2700, "rent_2br": 720},
+            "Симеоново":              {"type": "mid_high", "avg_sqm": 2600, "rent_2br": 710},
+            "Витоша":                 {"type": "mid_high", "avg_sqm": 2800, "rent_2br": 740},  # imot.bg: 2814
+            "Бистрица":               {"type": "mid_high", "avg_sqm": 2450, "rent_2br": 670},
+            "Лозен":                  {"type": "mid_high", "avg_sqm": 2000, "rent_2br": 590},
 
-            # ── MID ─────────────────────────────────────────────────────
-            "Младост 4":              {"type": "mid",      "avg_sqm": 2100, "rent_2br": 800},
-            "Дружба 1":               {"type": "mid",      "avg_sqm": 2550, "rent_2br": 920},
-            "Дружба 2":               {"type": "mid",      "avg_sqm": 2550, "rent_2br": 920},
-            "Мусагеница":             {"type": "mid",      "avg_sqm": 2600, "rent_2br": 940},
-            "Христо Ботев":           {"type": "mid",      "avg_sqm": 2200, "rent_2br": 790},
-            "Хаджи Димитър":          {"type": "mid",      "avg_sqm": 2250, "rent_2br": 800},
-            "Левски В":               {"type": "mid",      "avg_sqm": 2300, "rent_2br": 820},
-            "Левски Г":               {"type": "mid",      "avg_sqm": 2300, "rent_2br": 820},
-            "Подуяне":                {"type": "mid",      "avg_sqm": 2400, "rent_2br": 860},
-            "Горубляне":              {"type": "mid",      "avg_sqm": 2300, "rent_2br": 820},
-            "Бъкстон":                {"type": "mid",      "avg_sqm": 2500, "rent_2br": 900},
-            "Кожухарци":              {"type": "mid",      "avg_sqm": 2100, "rent_2br": 750},
-            "Захарна фабрика":        {"type": "mid",      "avg_sqm": 2100, "rent_2br": 750},
-            "Западен парк":           {"type": "mid",      "avg_sqm": 2450, "rent_2br": 870},
-            "Разсадника-Бежанци":     {"type": "mid",      "avg_sqm": 2450, "rent_2br": 870},
-            "Красна поляна":          {"type": "mid",      "avg_sqm": 2400, "rent_2br": 860},
-            "Овча купел 1":           {"type": "mid",      "avg_sqm": 2300, "rent_2br": 820},
-            "Овча купел 2":           {"type": "mid",      "avg_sqm": 2250, "rent_2br": 800},
-            "Обеля 1":                {"type": "mid",      "avg_sqm": 1950, "rent_2br": 700},
-            "Обеля 2":                {"type": "mid",      "avg_sqm": 1950, "rent_2br": 700},
-            "Зона Б-5":               {"type": "mid",      "avg_sqm": 2200, "rent_2br": 790},
-            "Зона Б-18":              {"type": "mid",      "avg_sqm": 2100, "rent_2br": 750},
-            "Зона Б-19":              {"type": "mid",      "avg_sqm": 2100, "rent_2br": 750},
-            "Сердика":                {"type": "mid",      "avg_sqm": 2200, "rent_2br": 790},
-            "Илинден":                {"type": "mid",      "avg_sqm": 2200, "rent_2br": 790},
-            "Орландовци":             {"type": "mid",      "avg_sqm": 2100, "rent_2br": 750},
-            "Република":              {"type": "mid",      "avg_sqm": 2100, "rent_2br": 750},
-            "Дървеница":              {"type": "mid",      "avg_sqm": 2450, "rent_2br": 870},
-            "Павлово":                {"type": "mid",      "avg_sqm": 2600, "rent_2br": 940},
-            "Лагера":                 {"type": "mid",      "avg_sqm": 2400, "rent_2br": 860},
-            "Света Троица":           {"type": "mid",      "avg_sqm": 2100, "rent_2br": 750},
-            "Фондови жилища":         {"type": "mid",      "avg_sqm": 2300, "rent_2br": 820},
-            "Монте Верде":            {"type": "mid",      "avg_sqm": 2250, "rent_2br": 800},
+            "Кръстова вада":          {"type": "mid_high", "avg_sqm": 2900, "rent_2br": 750},
+            "Малинова долина":        {"type": "mid_high", "avg_sqm": 2350, "rent_2br": 650},  # alo.bg: 2324
+            "Манастирски ливади":     {"type": "mid_high", "avg_sqm": 2850, "rent_2br": 730},  # alo.bg: 2835
+            "Горна Баня":             {"type": "mid_high", "avg_sqm": 2450, "rent_2br": 660},
 
-            # ── ECONOMY ─────────────────────────────────────────────────
-            "Надежда 1":              {"type": "economy",  "avg_sqm": 2050, "rent_2br": 720},
-            "Надежда 2":              {"type": "economy",  "avg_sqm": 2000, "rent_2br": 710},
-            "Надежда 3":              {"type": "economy",  "avg_sqm": 1950, "rent_2br": 700},
-            "Надежда 4":              {"type": "economy",  "avg_sqm": 1900, "rent_2br": 690},
-            "Люлин 1":                {"type": "economy",  "avg_sqm": 2300, "rent_2br": 810},
-            "Люлин 2":                {"type": "economy",  "avg_sqm": 2250, "rent_2br": 800},
-            "Люлин 3":                {"type": "economy",  "avg_sqm": 2200, "rent_2br": 780},
-            "Люлин 4":                {"type": "economy",  "avg_sqm": 2200, "rent_2br": 780},
-            "Люлин 5":                {"type": "economy",  "avg_sqm": 2200, "rent_2br": 780},
-            "Люлин 6":                {"type": "economy",  "avg_sqm": 2150, "rent_2br": 760},
-            "Люлин 7":                {"type": "economy",  "avg_sqm": 2150, "rent_2br": 760},
-            "Люлин 8":                {"type": "economy",  "avg_sqm": 2100, "rent_2br": 750},
-            "Люлин 9":                {"type": "economy",  "avg_sqm": 2100, "rent_2br": 750},
-            "Люлин 10":               {"type": "economy",  "avg_sqm": 2050, "rent_2br": 730},
-            "Банишора":               {"type": "economy",  "avg_sqm": 2150, "rent_2br": 760},
-            "Факултета":              {"type": "economy",  "avg_sqm": 1900, "rent_2br": 680},
-            "Връбница 1":             {"type": "economy",  "avg_sqm": 2100, "rent_2br": 740},
-            "Връбница 2":             {"type": "economy",  "avg_sqm": 2050, "rent_2br": 730},
-            "Военна рампа":           {"type": "economy",  "avg_sqm": 2100, "rent_2br": 740},
-            "Модерно предградие":     {"type": "economy",  "avg_sqm": 1850, "rent_2br": 660},
-            "Требич":                 {"type": "economy",  "avg_sqm": 1950, "rent_2br": 690},
-            "Суходол":                {"type": "economy",  "avg_sqm": 1700, "rent_2br": 620},
+            "Младост 1":              {"type": "mid_high", "avg_sqm": 3200, "rent_2br": 800},  # alo.bg: 3200
+            "Младост 2":              {"type": "mid_high", "avg_sqm": 2620, "rent_2br": 710},  # alo.bg: 2619
+            "Младост 3":              {"type": "mid_high", "avg_sqm": 3250, "rent_2br": 800},  # alo.bg: 3248
+            "Студентски град":        {"type": "mid_high", "avg_sqm": 2600, "rent_2br": 700},  # alo.bg: 2600
+            "Красно село":            {"type": "mid_high", "avg_sqm": 2500, "rent_2br": 680},
+            "Триадица":               {"type": "mid_high", "avg_sqm": 2875, "rent_2br": 740},  # alo.bg: 2875
+            "Дианабад":               {"type": "mid_high", "avg_sqm": 2450, "rent_2br": 670},
+            "Гео Милев":              {"type": "mid_high", "avg_sqm": 2500, "rent_2br": 680},
+            "Редута":                 {"type": "mid_high", "avg_sqm": 2300, "rent_2br": 640},
+            "Слатина":                {"type": "mid_high", "avg_sqm": 2200, "rent_2br": 620},
+            "Христо Смирненски":      {"type": "mid_high", "avg_sqm": 2200, "rent_2br": 620},
 
-            # ── SUBURB ──────────────────────────────────────────────────
-            "Казичене":               {"type": "suburb",   "avg_sqm": 900,  "rent_2br": 380},
-            "Враждебна":              {"type": "suburb",   "avg_sqm": 950,  "rent_2br": 390},
-            "Владая":                 {"type": "suburb",   "avg_sqm": 850,  "rent_2br": 370},
-            "Железница":              {"type": "suburb",   "avg_sqm": 1200, "rent_2br": 460},
-            "Панчарево":              {"type": "suburb",   "avg_sqm": 1400, "rent_2br": 520},
-            "Герман":                 {"type": "suburb",   "avg_sqm": 900,  "rent_2br": 370},
-            "Чепинци":                {"type": "suburb",   "avg_sqm": 750,  "rent_2br": 340},
-            "Нови Искър":             {"type": "suburb",   "avg_sqm": 800,  "rent_2br": 350},
+            # ── MID — 1400-2000 €/кв.м ──────────────────────────────────────
+            "Младост 4":              {"type": "mid",      "avg_sqm": 2640, "rent_2br": 700},  # alo.bg: 2638 — reclassify up
+            "Дружба 1":               {"type": "mid",      "avg_sqm": 2550, "rent_2br": 690},  # alo.bg: 2552
+            "Дружба 2":               {"type": "mid",      "avg_sqm": 2690, "rent_2br": 710},  # alo.bg: 2686
+            "Мусагеница":             {"type": "mid",      "avg_sqm": 2600, "rent_2br": 700},
+            "Христо Ботев":           {"type": "mid",      "avg_sqm": 2200, "rent_2br": 610},
+            "Хаджи Димитър":          {"type": "mid",      "avg_sqm": 2250, "rent_2br": 620},
+            "Левски В":               {"type": "mid",      "avg_sqm": 2300, "rent_2br": 630},
+            "Левски Г":               {"type": "mid",      "avg_sqm": 2300, "rent_2br": 630},
+            "Подуяне":                {"type": "mid",      "avg_sqm": 2400, "rent_2br": 650},
+            "Горубляне":              {"type": "mid",      "avg_sqm": 2300, "rent_2br": 630},
+            "Бъкстон":                {"type": "mid",      "avg_sqm": 2500, "rent_2br": 670},
+            "Кожухарци":              {"type": "mid",      "avg_sqm": 2100, "rent_2br": 580},
+            "Захарна фабрика":        {"type": "mid",      "avg_sqm": 2100, "rent_2br": 580},
+            "Западен парк":           {"type": "mid",      "avg_sqm": 2450, "rent_2br": 660},
+            "Разсадника-Бежанци":     {"type": "mid",      "avg_sqm": 2450, "rent_2br": 660},
+            "Красна поляна":          {"type": "mid",      "avg_sqm": 2640, "rent_2br": 700},  # alo.bg: 2638
+            "Овча купел 1":           {"type": "mid",      "avg_sqm": 2300, "rent_2br": 630},
+            "Овча купел 2":           {"type": "mid",      "avg_sqm": 2250, "rent_2br": 620},
+            "Обеля 1":                {"type": "mid",      "avg_sqm": 1950, "rent_2br": 540},
+            "Обеля 2":                {"type": "mid",      "avg_sqm": 1950, "rent_2br": 540},
+            "Зона Б-5":               {"type": "mid",      "avg_sqm": 2200, "rent_2br": 610},
+            "Зона Б-18":              {"type": "mid",      "avg_sqm": 2100, "rent_2br": 580},
+            "Зона Б-19":              {"type": "mid",      "avg_sqm": 2100, "rent_2br": 580},
+            "Сердика":                {"type": "mid",      "avg_sqm": 2200, "rent_2br": 610},
+            "Илинден":                {"type": "mid",      "avg_sqm": 2200, "rent_2br": 610},
+            "Орландовци":             {"type": "mid",      "avg_sqm": 2100, "rent_2br": 580},
+            "Република":              {"type": "mid",      "avg_sqm": 2100, "rent_2br": 580},
+            "Дървеница":              {"type": "mid",      "avg_sqm": 2450, "rent_2br": 660},
+            "Павлово":                {"type": "mid",      "avg_sqm": 2600, "rent_2br": 700},
+            "Лагера":                 {"type": "mid",      "avg_sqm": 2400, "rent_2br": 650},
+            "Света Троица":           {"type": "mid",      "avg_sqm": 2100, "rent_2br": 580},
+            "Фондови жилища":         {"type": "mid",      "avg_sqm": 2300, "rent_2br": 630},
+            "Монте Верде":            {"type": "mid",      "avg_sqm": 2250, "rent_2br": 620},
+
+            # ── ECONOMY — 900-1400 €/кв.м ───────────────────────────────────
+            "Надежда 1":              {"type": "economy",  "avg_sqm": 2460, "rent_2br": 650},  # alo.bg: 2459
+            "Надежда 2":              {"type": "economy",  "avg_sqm": 2470, "rent_2br": 650},  # alo.bg: 2470
+            "Надежда 3":              {"type": "economy",  "avg_sqm": 2300, "rent_2br": 610},
+            "Надежда 4":              {"type": "economy",  "avg_sqm": 2200, "rent_2br": 590},
+            "Люлин 1":                {"type": "economy",  "avg_sqm": 2300, "rent_2br": 620},
+            "Люлин 2":                {"type": "economy",  "avg_sqm": 2060, "rent_2br": 560},  # alo.bg: 2064
+            "Люлин 3":                {"type": "economy",  "avg_sqm": 2250, "rent_2br": 600},  # alo.bg: 2246
+            "Люлин 4":                {"type": "economy",  "avg_sqm": 2200, "rent_2br": 590},
+            "Люлин 5":                {"type": "economy",  "avg_sqm": 2200, "rent_2br": 590},
+            "Люлин 6":                {"type": "economy",  "avg_sqm": 2100, "rent_2br": 570},
+            "Люлин 7":                {"type": "economy",  "avg_sqm": 2100, "rent_2br": 570},
+            "Люлин 8":                {"type": "economy",  "avg_sqm": 2050, "rent_2br": 560},
+            "Люлин 9":                {"type": "economy",  "avg_sqm": 2050, "rent_2br": 560},
+            "Люлин 10":               {"type": "economy",  "avg_sqm": 2000, "rent_2br": 540},
+            "Банишора":               {"type": "economy",  "avg_sqm": 2150, "rent_2br": 580},
+            "Факултета":              {"type": "economy",  "avg_sqm": 1900, "rent_2br": 520},
+            "Връбница 1":             {"type": "economy",  "avg_sqm": 2100, "rent_2br": 570},
+            "Връбница 2":             {"type": "economy",  "avg_sqm": 2050, "rent_2br": 560},
+            "Военна рампа":           {"type": "economy",  "avg_sqm": 2100, "rent_2br": 570},
+            "Модерно предградие":     {"type": "economy",  "avg_sqm": 1850, "rent_2br": 500},
+            "Требич":                 {"type": "economy",  "avg_sqm": 1950, "rent_2br": 530},
+            "Суходол":                {"type": "economy",  "avg_sqm": 1700, "rent_2br": 460},
+
+            # ── SUBURB ──────────────────────────────────────────────────────
+            "Казичене":               {"type": "suburb",   "avg_sqm": 900,  "rent_2br": 290},
+            "Враждебна":              {"type": "suburb",   "avg_sqm": 950,  "rent_2br": 300},
+            "Владая":                 {"type": "suburb",   "avg_sqm": 850,  "rent_2br": 270},
+            "Железница":              {"type": "suburb",   "avg_sqm": 1200, "rent_2br": 360},
+            "Панчарево":              {"type": "suburb",   "avg_sqm": 1400, "rent_2br": 420},
+            "Герман":                 {"type": "suburb",   "avg_sqm": 900,  "rent_2br": 290},
+            "Чепинци":                {"type": "suburb",   "avg_sqm": 750,  "rent_2br": 250},
+            "Нови Искър":             {"type": "suburb",   "avg_sqm": 800,  "rent_2br": 260},
         },
     },
 
     # ═══════════════════════════════════════════════════════════════════════
-    # ПЛОВДИВ
+    # ПЛОВДИВ  —  Последно обновяване: 2026-05-12
+    # Источник: marica.bg Q1 2026; alo.bg 11.05.2026
+    # Пловдив расте бързо — данните от 2025 са подценени с ~30%
     # ═══════════════════════════════════════════════════════════════════════
     "Пловдив": {
         "imotbg_id": "2",
         "zones": {
-            "Център":           {"type": "premium",  "avg_sqm": 1850, "rent_2br": 650},
-            "Стария град":      {"type": "premium",  "avg_sqm": 1700, "rent_2br": 600},
-            "Каменица 1":       {"type": "mid_high", "avg_sqm": 1550, "rent_2br": 560},
-            "Каменица 2":       {"type": "mid_high", "avg_sqm": 1500, "rent_2br": 540},
-            "Кършияка":         {"type": "mid_high", "avg_sqm": 1450, "rent_2br": 530},
-            "Тракия":           {"type": "mid",      "avg_sqm": 1200, "rent_2br": 450},
-            "Смирненски":       {"type": "mid",      "avg_sqm": 1150, "rent_2br": 430},
-            "Въстанически":     {"type": "mid",      "avg_sqm": 1250, "rent_2br": 460},
-            "Марашки":          {"type": "mid",      "avg_sqm": 1100, "rent_2br": 420},
-            "Остромила":        {"type": "mid_high", "avg_sqm": 1400, "rent_2br": 510},
-            "Беломорски":       {"type": "mid",      "avg_sqm": 1200, "rent_2br": 440},
-            "Западен":          {"type": "economy",  "avg_sqm": 1000, "rent_2br": 400},
-            "Прослав":          {"type": "economy",  "avg_sqm": 950,  "rent_2br": 380},
-            "Коматево":         {"type": "economy",  "avg_sqm": 900,  "rent_2br": 370},
-            "Христо Ботев":     {"type": "mid",      "avg_sqm": 1100, "rent_2br": 410},
-            "Съдийски":         {"type": "mid",      "avg_sqm": 1100, "rent_2br": 410},
-            "Баня Хисаря":      {"type": "mid",      "avg_sqm": 1050, "rent_2br": 400},
-            "Гагарин":          {"type": "mid",      "avg_sqm": 1150, "rent_2br": 420},
-            "Захарна фабрика":  {"type": "economy",  "avg_sqm": 950,  "rent_2br": 370},
-            "Периферия":        {"type": "economy",  "avg_sqm": 900,  "rent_2br": 360},
+            "Център":           {"type": "premium",  "avg_sqm": 2270, "rent_2br": 720},  # alo.bg: 2322; marica: 2260
+            "Стария град":      {"type": "premium",  "avg_sqm": 2000, "rent_2br": 660},
+            "Каменица 1":       {"type": "premium",  "avg_sqm": 2150, "rent_2br": 700},  # alo.bg: 2145-2250
+            "Каменица 2":       {"type": "mid_high", "avg_sqm": 1700, "rent_2br": 580},  # alo.bg: 1445-1958
+            "Кършияка":         {"type": "mid_high", "avg_sqm": 1750, "rent_2br": 590},  # alo.bg: 1537-2011
+            "Мараша":           {"type": "mid_high", "avg_sqm": 2150, "rent_2br": 690},  # alo.bg: 2136-2345
+            "Остромила":        {"type": "mid_high", "avg_sqm": 1350, "rent_2br": 470},  # alo.bg: 1259-1384
+            "Тракия":           {"type": "mid",      "avg_sqm": 1400, "rent_2br": 490},  # alo.bg: 1153-1605 avg
+            "Смирненски":       {"type": "mid",      "avg_sqm": 1530, "rent_2br": 520},  # alo.bg: 1518-1679
+            "Въстанически":     {"type": "mid",      "avg_sqm": 1450, "rent_2br": 500},
+            "Беломорски":       {"type": "mid",      "avg_sqm": 1380, "rent_2br": 470},
+            "Христо Ботев":     {"type": "mid",      "avg_sqm": 1300, "rent_2br": 450},
+            "Съдийски":         {"type": "mid",      "avg_sqm": 1200, "rent_2br": 430},
+            "Баня Хисаря":      {"type": "mid",      "avg_sqm": 1200, "rent_2br": 430},
+            "Гагарин":          {"type": "mid",      "avg_sqm": 1350, "rent_2br": 460},
+            "Западен":          {"type": "economy",  "avg_sqm": 1150, "rent_2br": 420},
+            "Прослав":          {"type": "economy",  "avg_sqm": 1100, "rent_2br": 400},
+            "Коматево":         {"type": "economy",  "avg_sqm": 1050, "rent_2br": 390},
+            "Захарна фабрика":  {"type": "economy",  "avg_sqm": 1100, "rent_2br": 400},
+            "Периферия":        {"type": "economy",  "avg_sqm": 1050, "rent_2br": 390},
         },
     },
 
     # ═══════════════════════════════════════════════════════════════════════
-    # ВАРНА
+    # ВАРНА  —  Последно обновяване: 2026-05-12
+    # Источник: varnenskoutro.bg Q4 2025/Q1 2026; alo.bg 11.05.2026; meduzata.com
     # ═══════════════════════════════════════════════════════════════════════
     "Варна": {
         "imotbg_id": "3",
         "zones": {
-            "Център":               {"type": "premium",  "avg_sqm": 2600, "rent_2br": 900},
-            "Одесос":               {"type": "premium",  "avg_sqm": 2400, "rent_2br": 850},
-            "Чайка":                {"type": "premium",  "avg_sqm": 2800, "rent_2br": 950},
-            "Морска градина":       {"type": "premium",  "avg_sqm": 2700, "rent_2br": 920},
-            "Аспарухово":           {"type": "mid",      "avg_sqm": 1600, "rent_2br": 580},
-            "Левски":               {"type": "mid_high", "avg_sqm": 2000, "rent_2br": 700},
-            "Младост":              {"type": "mid_high", "avg_sqm": 1900, "rent_2br": 680},
-            "Победа":               {"type": "mid",      "avg_sqm": 1700, "rent_2br": 620},
-            "Трошево":              {"type": "mid_high", "avg_sqm": 2100, "rent_2br": 740},
-            "Изгрев":               {"type": "mid",      "avg_sqm": 1750, "rent_2br": 630},
-            "Цветен квартал":       {"type": "mid_high", "avg_sqm": 2000, "rent_2br": 710},
+            "Център":               {"type": "premium",  "avg_sqm": 2660, "rent_2br": 870},  # alo.bg: 2658
+            "Одесос":               {"type": "premium",  "avg_sqm": 2400, "rent_2br": 820},
+            "Гръцки квартал":       {"type": "premium",  "avg_sqm": 3150, "rent_2br": 950},  # alo.bg: 3158
+            "Чайка":                {"type": "premium",  "avg_sqm": 2500, "rent_2br": 840},  # alo.bg: 2043-3000 avg
+            "Морска градина":       {"type": "premium",  "avg_sqm": 2700, "rent_2br": 890},
+            "Бриз":                 {"type": "premium",  "avg_sqm": 2400, "rent_2br": 820},
+            "Левски":               {"type": "mid_high", "avg_sqm": 2010, "rent_2br": 680},  # alo.bg: 1991-2020
+            "Трошево":              {"type": "mid_high", "avg_sqm": 2100, "rent_2br": 700},
+            "Цветен квартал":       {"type": "mid_high", "avg_sqm": 2000, "rent_2br": 680},
+            "Виница":               {"type": "mid_high", "avg_sqm": 1600, "rent_2br": 570},  # alo.bg: 1515-1694 (was 2200!)
+            "Младост":              {"type": "mid",      "avg_sqm": 1700, "rent_2br": 600},  # alo.bg: ~1714 (was 1900)
+            "Победа":               {"type": "mid",      "avg_sqm": 1700, "rent_2br": 600},
+            "Изгрев":               {"type": "mid",      "avg_sqm": 1750, "rent_2br": 610},
             "Галата":               {"type": "mid",      "avg_sqm": 1700, "rent_2br": 600},
-            "Виница":               {"type": "mid_high", "avg_sqm": 2200, "rent_2br": 760},
-            "Владислав Варненчик":  {"type": "mid",      "avg_sqm": 1800, "rent_2br": 640},
-            "Бриз":                 {"type": "premium",  "avg_sqm": 2500, "rent_2br": 880},
-            "Кайсиева градина":     {"type": "mid",      "avg_sqm": 1750, "rent_2br": 630},
-            "Западна промишлена":   {"type": "economy",  "avg_sqm": 1200, "rent_2br": 470},
-            "Кватал 8-ми Приморски": {"type": "mid",     "avg_sqm": 1600, "rent_2br": 580},
-            "Периферия":            {"type": "economy",  "avg_sqm": 1300, "rent_2br": 490},
+            "Аспарухово":           {"type": "mid",      "avg_sqm": 1490, "rent_2br": 540},  # alo.bg: 1399-1575
+            "Кайсиева градина":     {"type": "mid",      "avg_sqm": 1450, "rent_2br": 530},  # alo.bg: 1401-1507 (was 1750!)
+            "Владислав Варненчик":  {"type": "mid",      "avg_sqm": 1450, "rent_2br": 530},  # alo.bg: 1412-1488 (was 1800!)
+            "Кватал 8-ми Приморски": {"type": "mid",     "avg_sqm": 1600, "rent_2br": 570},
+            "Западна промишлена":   {"type": "economy",  "avg_sqm": 1200, "rent_2br": 440},
+            "Периферия":            {"type": "economy",  "avg_sqm": 1300, "rent_2br": 470},
         },
     },
 
     # ═══════════════════════════════════════════════════════════════════════
-    # БУРГАС
+    # БУРГАС  —  Последно обновяване: 2026-05-12
+    # Источник: bmt-news.com 2025; alo.bg 11.05.2026
     # ═══════════════════════════════════════════════════════════════════════
     "Бургас": {
         "imotbg_id": "4",
         "zones": {
-            "Център":               {"type": "premium",  "avg_sqm": 2200, "rent_2br": 750},
-            "Лазур":                {"type": "premium",  "avg_sqm": 2400, "rent_2br": 820},
-            "Меден рудник":         {"type": "mid",      "avg_sqm": 1400, "rent_2br": 520},
-            "Зорница":              {"type": "mid_high", "avg_sqm": 1700, "rent_2br": 600},
-            "Изгрев":               {"type": "mid_high", "avg_sqm": 1800, "rent_2br": 630},
+            "Център":               {"type": "premium",  "avg_sqm": 2500, "rent_2br": 800},  # alo.bg: 2498 (was 2200!)
+            "Лазур":                {"type": "premium",  "avg_sqm": 2500, "rent_2br": 800},  # alo.bg: 2500
+            "Зорница":              {"type": "premium",  "avg_sqm": 2200, "rent_2br": 730},  # alo.bg: 2213 (was 1700!)
+            "Сарафово":             {"type": "mid_high", "avg_sqm": 1870, "rent_2br": 630},  # alo.bg: 1868
+            "Изгрев":               {"type": "mid_high", "avg_sqm": 1880, "rent_2br": 630},  # alo.bg: 1885
+            "Минерални бани":       {"type": "mid_high", "avg_sqm": 1700, "rent_2br": 590},
+            "Славейков":            {"type": "mid_high", "avg_sqm": 2100, "rent_2br": 700},  # alo.bg: 2095 (was 1600!)
+            "Крайморие":            {"type": "mid_high", "avg_sqm": 2100, "rent_2br": 700},
             "Победа":               {"type": "mid",      "avg_sqm": 1500, "rent_2br": 540},
             "Братя Миладинови":     {"type": "mid",      "avg_sqm": 1500, "rent_2br": 540},
-            "Сарафово":             {"type": "mid_high", "avg_sqm": 1900, "rent_2br": 660},
-            "Минерални бани":       {"type": "mid_high", "avg_sqm": 1700, "rent_2br": 600},
-            "Славейков":            {"type": "mid",      "avg_sqm": 1600, "rent_2br": 570},
-            "Черно море":           {"type": "mid",      "avg_sqm": 1550, "rent_2br": 560},
-            "Крайморие":            {"type": "premium",  "avg_sqm": 2100, "rent_2br": 720},
-            "Банево":               {"type": "suburb",   "avg_sqm": 1200, "rent_2br": 460},
-            "Периферия":            {"type": "economy",  "avg_sqm": 1100, "rent_2br": 430},
+            "Черно море":           {"type": "mid",      "avg_sqm": 1550, "rent_2br": 550},
+            "Меден рудник":         {"type": "economy",  "avg_sqm": 1200, "rent_2br": 440},  # alo.bg: 1176 (was 1400)
+            "Банево":               {"type": "suburb",   "avg_sqm": 1200, "rent_2br": 440},
+            "Периферия":            {"type": "economy",  "avg_sqm": 1050, "rent_2br": 400},
         },
     },
 
     # ═══════════════════════════════════════════════════════════════════════
-    # СТАРА ЗАГОРА
+    # СТАРА ЗАГОРА  —  Оценъчни данни Q1 2026
     # ═══════════════════════════════════════════════════════════════════════
     "Стара Загора": {
         "imotbg_id": "6",
         "zones": {
-            "Център":         {"type": "premium",  "avg_sqm": 1100, "rent_2br": 380},
-            "Три чучура":     {"type": "mid_high", "avg_sqm": 1050, "rent_2br": 360},
-            "Казански":       {"type": "mid",      "avg_sqm": 900,  "rent_2br": 330},
-            "Железник":       {"type": "mid",      "avg_sqm": 850,  "rent_2br": 310},
-            "Аязмото":        {"type": "mid_high", "avg_sqm": 1000, "rent_2br": 350},
-            "Зора":           {"type": "mid",      "avg_sqm": 880,  "rent_2br": 320},
-            "Самара":         {"type": "mid",      "avg_sqm": 870,  "rent_2br": 310},
-            "Индустриална":   {"type": "economy",  "avg_sqm": 700,  "rent_2br": 270},
-            "Периферия":      {"type": "economy",  "avg_sqm": 680,  "rent_2br": 260},
+            "Център":         {"type": "premium",  "avg_sqm": 1200, "rent_2br": 400},
+            "Три чучура":     {"type": "mid_high", "avg_sqm": 1100, "rent_2br": 370},
+            "Казански":       {"type": "mid",      "avg_sqm": 950,  "rent_2br": 340},
+            "Железник":       {"type": "mid",      "avg_sqm": 900,  "rent_2br": 320},
+            "Аязмото":        {"type": "mid_high", "avg_sqm": 1050, "rent_2br": 360},
+            "Зора":           {"type": "mid",      "avg_sqm": 920,  "rent_2br": 330},
+            "Самара":         {"type": "mid",      "avg_sqm": 910,  "rent_2br": 320},
+            "Индустриална":   {"type": "economy",  "avg_sqm": 730,  "rent_2br": 280},
+            "Периферия":      {"type": "economy",  "avg_sqm": 700,  "rent_2br": 270},
         },
     },
 
     # ═══════════════════════════════════════════════════════════════════════
-    # РУСЕ
+    # РУСЕ  —  Оценъчни данни Q1 2026
     # ═══════════════════════════════════════════════════════════════════════
     "Русе": {
         "imotbg_id": "7",
         "zones": {
-            "Център":           {"type": "premium",  "avg_sqm": 1100, "rent_2br": 380},
-            "Дружба 1":         {"type": "mid",      "avg_sqm": 850,  "rent_2br": 310},
-            "Дружба 2":         {"type": "mid",      "avg_sqm": 850,  "rent_2br": 310},
-            "Дружба 3":         {"type": "mid",      "avg_sqm": 830,  "rent_2br": 300},
-            "Здравец":          {"type": "mid_high", "avg_sqm": 1000, "rent_2br": 350},
-            "Чародейка":        {"type": "mid",      "avg_sqm": 880,  "rent_2br": 320},
-            "Родина":           {"type": "economy",  "avg_sqm": 760,  "rent_2br": 280},
-            "Изток":            {"type": "mid",      "avg_sqm": 850,  "rent_2br": 310},
-            "Периферия":        {"type": "economy",  "avg_sqm": 700,  "rent_2br": 260},
+            "Център":           {"type": "premium",  "avg_sqm": 1150, "rent_2br": 390},
+            "Дружба 1":         {"type": "mid",      "avg_sqm": 880,  "rent_2br": 320},
+            "Дружба 2":         {"type": "mid",      "avg_sqm": 880,  "rent_2br": 320},
+            "Дружба 3":         {"type": "mid",      "avg_sqm": 860,  "rent_2br": 310},
+            "Здравец":          {"type": "mid_high", "avg_sqm": 1050, "rent_2br": 360},
+            "Чародейка":        {"type": "mid",      "avg_sqm": 920,  "rent_2br": 330},
+            "Родина":           {"type": "economy",  "avg_sqm": 800,  "rent_2br": 290},
+            "Изток":            {"type": "mid",      "avg_sqm": 880,  "rent_2br": 320},
+            "Периферия":        {"type": "economy",  "avg_sqm": 720,  "rent_2br": 270},
         },
     },
 
     # ═══════════════════════════════════════════════════════════════════════
-    # ВЕЛИКО ТЪРНОВО
+    # ВЕЛИКО ТЪРНОВО  —  Оценъчни данни Q1 2026
     # ═══════════════════════════════════════════════════════════════════════
     "Велико Търново": {
         "imotbg_id": "10",
         "zones": {
-            "Център":         {"type": "premium",  "avg_sqm": 1050, "rent_2br": 360},
-            "Картала":        {"type": "mid_high", "avg_sqm": 1000, "rent_2br": 340},
-            "Акация":         {"type": "mid",      "avg_sqm": 880,  "rent_2br": 310},
-            "Колю Фичето":    {"type": "mid",      "avg_sqm": 850,  "rent_2br": 300},
-            "Бузлуджа":       {"type": "mid",      "avg_sqm": 820,  "rent_2br": 290},
-            "Варуша":         {"type": "mid_high", "avg_sqm": 950,  "rent_2br": 330},
-            "Периферия":      {"type": "economy",  "avg_sqm": 700,  "rent_2br": 260},
+            "Център":         {"type": "premium",  "avg_sqm": 1100, "rent_2br": 370},
+            "Картала":        {"type": "mid_high", "avg_sqm": 1050, "rent_2br": 360},
+            "Акация":         {"type": "mid",      "avg_sqm": 920,  "rent_2br": 320},
+            "Колю Фичето":    {"type": "mid",      "avg_sqm": 890,  "rent_2br": 310},
+            "Бузлуджа":       {"type": "mid",      "avg_sqm": 860,  "rent_2br": 300},
+            "Варуша":         {"type": "mid_high", "avg_sqm": 1000, "rent_2br": 345},
+            "Периферия":      {"type": "economy",  "avg_sqm": 730,  "rent_2br": 270},
         },
     },
 
     # ═══════════════════════════════════════════════════════════════════════
-    # БЛАГОЕВГРАД
+    # БЛАГОЕВГРАД  —  Оценъчни данни Q1 2026
     # ═══════════════════════════════════════════════════════════════════════
     "Благоевград": {
         "imotbg_id": "17",
         "zones": {
-            "Център":       {"type": "premium",  "avg_sqm": 1000, "rent_2br": 350},
-            "Струмско":     {"type": "mid",      "avg_sqm": 820,  "rent_2br": 290},
-            "Еленово":      {"type": "mid",      "avg_sqm": 800,  "rent_2br": 280},
-            "Грамада":      {"type": "mid",      "avg_sqm": 780,  "rent_2br": 270},
-            "Периферия":    {"type": "economy",  "avg_sqm": 680,  "rent_2br": 250},
+            "Център":       {"type": "premium",  "avg_sqm": 1050, "rent_2br": 360},
+            "Струмско":     {"type": "mid",      "avg_sqm": 860,  "rent_2br": 300},
+            "Еленово":      {"type": "mid",      "avg_sqm": 840,  "rent_2br": 295},
+            "Грамада":      {"type": "mid",      "avg_sqm": 820,  "rent_2br": 285},
+            "Периферия":    {"type": "economy",  "avg_sqm": 710,  "rent_2br": 260},
         },
     },
 
     # ═══════════════════════════════════════════════════════════════════════
-    # ПЛЕВЕН
+    # ПЛЕВЕН  —  Оценъчни данни Q1 2026
     # ═══════════════════════════════════════════════════════════════════════
     "Плевен": {
         "imotbg_id": "8",
         "zones": {
-            "Център":           {"type": "premium",  "avg_sqm": 900,  "rent_2br": 320},
-            "Сторгозия":        {"type": "mid",      "avg_sqm": 750,  "rent_2br": 270},
-            "Дружба":           {"type": "mid",      "avg_sqm": 780,  "rent_2br": 280},
-            "Кайлъка":          {"type": "mid_high", "avg_sqm": 850,  "rent_2br": 300},
-            "Периферия":        {"type": "economy",  "avg_sqm": 650,  "rent_2br": 240},
+            "Център":           {"type": "premium",  "avg_sqm": 950,  "rent_2br": 330},
+            "Сторгозия":        {"type": "mid",      "avg_sqm": 790,  "rent_2br": 280},
+            "Дружба":           {"type": "mid",      "avg_sqm": 820,  "rent_2br": 290},
+            "Кайлъка":          {"type": "mid_high", "avg_sqm": 900,  "rent_2br": 315},
+            "Периферия":        {"type": "economy",  "avg_sqm": 680,  "rent_2br": 250},
         },
     },
 
@@ -303,10 +327,10 @@ LOCATIONS: Dict[str, Dict] = {
     "Сливен": {
         "imotbg_id": "14",
         "zones": {
-            "Център":       {"type": "premium",  "avg_sqm": 800,  "rent_2br": 290},
-            "Клуцохор":     {"type": "mid",      "avg_sqm": 700,  "rent_2br": 260},
-            "Дружба":       {"type": "mid",      "avg_sqm": 680,  "rent_2br": 250},
-            "Периферия":    {"type": "economy",  "avg_sqm": 580,  "rent_2br": 220},
+            "Център":       {"type": "premium",  "avg_sqm": 840,  "rent_2br": 300},
+            "Клуцохор":     {"type": "mid",      "avg_sqm": 730,  "rent_2br": 270},
+            "Дружба":       {"type": "mid",      "avg_sqm": 710,  "rent_2br": 260},
+            "Периферия":    {"type": "economy",  "avg_sqm": 600,  "rent_2br": 230},
         },
     },
 
@@ -316,10 +340,10 @@ LOCATIONS: Dict[str, Dict] = {
     "Добрич": {
         "imotbg_id": "9",
         "zones": {
-            "Център":       {"type": "premium",  "avg_sqm": 900,  "rent_2br": 320},
-            "Дружба":       {"type": "mid",      "avg_sqm": 750,  "rent_2br": 270},
-            "Строител":     {"type": "mid",      "avg_sqm": 720,  "rent_2br": 260},
-            "Периферия":    {"type": "economy",  "avg_sqm": 620,  "rent_2br": 230},
+            "Център":       {"type": "premium",  "avg_sqm": 950,  "rent_2br": 330},
+            "Дружба":       {"type": "mid",      "avg_sqm": 790,  "rent_2br": 280},
+            "Строител":     {"type": "mid",      "avg_sqm": 760,  "rent_2br": 270},
+            "Периферия":    {"type": "economy",  "avg_sqm": 650,  "rent_2br": 240},
         },
     },
 
@@ -329,10 +353,10 @@ LOCATIONS: Dict[str, Dict] = {
     "Шумен": {
         "imotbg_id": "11",
         "zones": {
-            "Център":       {"type": "premium",  "avg_sqm": 820,  "rent_2br": 290},
-            "Тракия":       {"type": "mid",      "avg_sqm": 700,  "rent_2br": 260},
-            "Дружба":       {"type": "mid",      "avg_sqm": 690,  "rent_2br": 250},
-            "Периферия":    {"type": "economy",  "avg_sqm": 580,  "rent_2br": 210},
+            "Център":       {"type": "premium",  "avg_sqm": 870,  "rent_2br": 300},
+            "Тракия":       {"type": "mid",      "avg_sqm": 730,  "rent_2br": 270},
+            "Дружба":       {"type": "mid",      "avg_sqm": 720,  "rent_2br": 265},
+            "Периферия":    {"type": "economy",  "avg_sqm": 600,  "rent_2br": 220},
         },
     },
 
@@ -342,9 +366,9 @@ LOCATIONS: Dict[str, Dict] = {
     "Перник": {
         "imotbg_id": "22",
         "zones": {
-            "Център":       {"type": "mid",      "avg_sqm": 650,  "rent_2br": 240},
-            "Тева":         {"type": "mid",      "avg_sqm": 600,  "rent_2br": 220},
-            "Периферия":    {"type": "economy",  "avg_sqm": 500,  "rent_2br": 190},
+            "Център":       {"type": "mid",      "avg_sqm": 680,  "rent_2br": 250},
+            "Тева":         {"type": "mid",      "avg_sqm": 630,  "rent_2br": 230},
+            "Периферия":    {"type": "economy",  "avg_sqm": 520,  "rent_2br": 200},
         },
     },
 
@@ -354,10 +378,10 @@ LOCATIONS: Dict[str, Dict] = {
     "Хасково": {
         "imotbg_id": "16",
         "zones": {
-            "Център":       {"type": "premium",  "avg_sqm": 800,  "rent_2br": 280},
-            "Орфей":        {"type": "mid",      "avg_sqm": 700,  "rent_2br": 250},
-            "Дружба":       {"type": "mid",      "avg_sqm": 680,  "rent_2br": 250},
-            "Периферия":    {"type": "economy",  "avg_sqm": 580,  "rent_2br": 210},
+            "Център":       {"type": "premium",  "avg_sqm": 840,  "rent_2br": 290},
+            "Орфей":        {"type": "mid",      "avg_sqm": 730,  "rent_2br": 260},
+            "Дружба":       {"type": "mid",      "avg_sqm": 710,  "rent_2br": 260},
+            "Периферия":    {"type": "economy",  "avg_sqm": 600,  "rent_2br": 220},
         },
     },
 
@@ -367,9 +391,9 @@ LOCATIONS: Dict[str, Dict] = {
     "Ямбол": {
         "imotbg_id": "15",
         "zones": {
-            "Център":       {"type": "premium",  "avg_sqm": 750,  "rent_2br": 270},
-            "Граф Игнатиев": {"type": "mid",     "avg_sqm": 650,  "rent_2br": 240},
-            "Периферия":    {"type": "economy",  "avg_sqm": 550,  "rent_2br": 200},
+            "Център":        {"type": "premium",  "avg_sqm": 790,  "rent_2br": 280},
+            "Граф Игнатиев": {"type": "mid",      "avg_sqm": 680,  "rent_2br": 250},
+            "Периферия":     {"type": "economy",  "avg_sqm": 570,  "rent_2br": 210},
         },
     },
 
@@ -379,9 +403,9 @@ LOCATIONS: Dict[str, Dict] = {
     "Пазарджик": {
         "imotbg_id": "20",
         "zones": {
-            "Център":       {"type": "premium",  "avg_sqm": 850,  "rent_2br": 300},
-            "Изток":        {"type": "mid",      "avg_sqm": 720,  "rent_2br": 260},
-            "Периферия":    {"type": "economy",  "avg_sqm": 600,  "rent_2br": 220},
+            "Център":       {"type": "premium",  "avg_sqm": 900,  "rent_2br": 310},
+            "Изток":        {"type": "mid",      "avg_sqm": 760,  "rent_2br": 270},
+            "Периферия":    {"type": "economy",  "avg_sqm": 630,  "rent_2br": 230},
         },
     },
 
@@ -391,8 +415,8 @@ LOCATIONS: Dict[str, Dict] = {
     "Монтана": {
         "imotbg_id": "24",
         "zones": {
-            "Център":       {"type": "mid",      "avg_sqm": 600,  "rent_2br": 220},
-            "Периферия":    {"type": "economy",  "avg_sqm": 500,  "rent_2br": 190},
+            "Център":       {"type": "mid",      "avg_sqm": 630,  "rent_2br": 230},
+            "Периферия":    {"type": "economy",  "avg_sqm": 520,  "rent_2br": 200},
         },
     },
 
@@ -402,8 +426,8 @@ LOCATIONS: Dict[str, Dict] = {
     "Враца": {
         "imotbg_id": "23",
         "zones": {
-            "Център":       {"type": "mid",      "avg_sqm": 600,  "rent_2br": 220},
-            "Периферия":    {"type": "economy",  "avg_sqm": 480,  "rent_2br": 180},
+            "Център":       {"type": "mid",      "avg_sqm": 630,  "rent_2br": 230},
+            "Периферия":    {"type": "economy",  "avg_sqm": 500,  "rent_2br": 190},
         },
     },
 
@@ -413,8 +437,8 @@ LOCATIONS: Dict[str, Dict] = {
     "Видин": {
         "imotbg_id": "25",
         "zones": {
-            "Център":       {"type": "mid",      "avg_sqm": 550,  "rent_2br": 200},
-            "Периферия":    {"type": "economy",  "avg_sqm": 420,  "rent_2br": 160},
+            "Център":       {"type": "mid",      "avg_sqm": 580,  "rent_2br": 210},
+            "Периферия":    {"type": "economy",  "avg_sqm": 440,  "rent_2br": 170},
         },
     },
 
@@ -424,9 +448,9 @@ LOCATIONS: Dict[str, Dict] = {
     "Габрово": {
         "imotbg_id": "13",
         "zones": {
-            "Център":       {"type": "premium",  "avg_sqm": 750,  "rent_2br": 270},
-            "Дядо Дянко":   {"type": "mid",      "avg_sqm": 650,  "rent_2br": 240},
-            "Периферия":    {"type": "economy",  "avg_sqm": 530,  "rent_2br": 200},
+            "Център":       {"type": "premium",  "avg_sqm": 790,  "rent_2br": 280},
+            "Дядо Дянко":   {"type": "mid",      "avg_sqm": 680,  "rent_2br": 250},
+            "Периферия":    {"type": "economy",  "avg_sqm": 550,  "rent_2br": 210},
         },
     },
 
@@ -436,8 +460,8 @@ LOCATIONS: Dict[str, Dict] = {
     "Ловеч": {
         "imotbg_id": "19",
         "zones": {
-            "Център":       {"type": "mid",      "avg_sqm": 650,  "rent_2br": 240},
-            "Периферия":    {"type": "economy",  "avg_sqm": 520,  "rent_2br": 190},
+            "Център":       {"type": "mid",      "avg_sqm": 680,  "rent_2br": 250},
+            "Периферия":    {"type": "economy",  "avg_sqm": 540,  "rent_2br": 200},
         },
     },
 
@@ -447,8 +471,8 @@ LOCATIONS: Dict[str, Dict] = {
     "Търговище": {
         "imotbg_id": "27",
         "zones": {
-            "Център":       {"type": "mid",      "avg_sqm": 650,  "rent_2br": 230},
-            "Периферия":    {"type": "economy",  "avg_sqm": 520,  "rent_2br": 190},
+            "Център":       {"type": "mid",      "avg_sqm": 680,  "rent_2br": 240},
+            "Периферия":    {"type": "economy",  "avg_sqm": 540,  "rent_2br": 200},
         },
     },
 
@@ -458,8 +482,8 @@ LOCATIONS: Dict[str, Dict] = {
     "Разград": {
         "imotbg_id": "26",
         "zones": {
-            "Център":       {"type": "mid",      "avg_sqm": 620,  "rent_2br": 230},
-            "Периферия":    {"type": "economy",  "avg_sqm": 490,  "rent_2br": 180},
+            "Център":       {"type": "mid",      "avg_sqm": 650,  "rent_2br": 240},
+            "Периферия":    {"type": "economy",  "avg_sqm": 510,  "rent_2br": 190},
         },
     },
 
@@ -469,8 +493,8 @@ LOCATIONS: Dict[str, Dict] = {
     "Силистра": {
         "imotbg_id": "28",
         "zones": {
-            "Център":       {"type": "mid",      "avg_sqm": 600,  "rent_2br": 220},
-            "Периферия":    {"type": "economy",  "avg_sqm": 460,  "rent_2br": 170},
+            "Център":       {"type": "mid",      "avg_sqm": 630,  "rent_2br": 230},
+            "Периферия":    {"type": "economy",  "avg_sqm": 480,  "rent_2br": 180},
         },
     },
 
@@ -480,8 +504,8 @@ LOCATIONS: Dict[str, Dict] = {
     "Смолян": {
         "imotbg_id": "21",
         "zones": {
-            "Център":       {"type": "mid",      "avg_sqm": 700,  "rent_2br": 250},
-            "Периферия":    {"type": "economy",  "avg_sqm": 560,  "rent_2br": 200},
+            "Център":       {"type": "mid",      "avg_sqm": 730,  "rent_2br": 260},
+            "Периферия":    {"type": "economy",  "avg_sqm": 580,  "rent_2br": 210},
         },
     },
 
@@ -491,8 +515,8 @@ LOCATIONS: Dict[str, Dict] = {
     "Кюстендил": {
         "imotbg_id": "18",
         "zones": {
-            "Център":       {"type": "mid",      "avg_sqm": 700,  "rent_2br": 250},
-            "Периферия":    {"type": "economy",  "avg_sqm": 560,  "rent_2br": 200},
+            "Център":       {"type": "mid",      "avg_sqm": 730,  "rent_2br": 260},
+            "Периферия":    {"type": "economy",  "avg_sqm": 580,  "rent_2br": 210},
         },
     },
 
@@ -502,8 +526,8 @@ LOCATIONS: Dict[str, Dict] = {
     "Кърджали": {
         "imotbg_id": "12",
         "zones": {
-            "Център":       {"type": "mid",      "avg_sqm": 650,  "rent_2br": 240},
-            "Периферия":    {"type": "economy",  "avg_sqm": 520,  "rent_2br": 190},
+            "Център":       {"type": "mid",      "avg_sqm": 680,  "rent_2br": 250},
+            "Периферия":    {"type": "economy",  "avg_sqm": 540,  "rent_2br": 200},
         },
     },
 
@@ -513,8 +537,8 @@ LOCATIONS: Dict[str, Dict] = {
     "Казанлък": {
         "imotbg_id": "33",
         "zones": {
-            "Център":       {"type": "mid",      "avg_sqm": 750,  "rent_2br": 270},
-            "Периферия":    {"type": "economy",  "avg_sqm": 600,  "rent_2br": 220},
+            "Център":       {"type": "mid",      "avg_sqm": 790,  "rent_2br": 280},
+            "Периферия":    {"type": "economy",  "avg_sqm": 630,  "rent_2br": 230},
         },
     },
 
@@ -524,8 +548,8 @@ LOCATIONS: Dict[str, Dict] = {
     "Асеновград": {
         "imotbg_id": "34",
         "zones": {
-            "Център":       {"type": "mid",      "avg_sqm": 900,  "rent_2br": 310},
-            "Периферия":    {"type": "economy",  "avg_sqm": 700,  "rent_2br": 250},
+            "Център":       {"type": "mid",      "avg_sqm": 950,  "rent_2br": 320},
+            "Периферия":    {"type": "economy",  "avg_sqm": 730,  "rent_2br": 260},
         },
     },
 
@@ -535,8 +559,8 @@ LOCATIONS: Dict[str, Dict] = {
     "Дупница": {
         "imotbg_id": "35",
         "zones": {
-            "Център":       {"type": "mid",      "avg_sqm": 700,  "rent_2br": 250},
-            "Периферия":    {"type": "economy",  "avg_sqm": 550,  "rent_2br": 200},
+            "Център":       {"type": "mid",      "avg_sqm": 730,  "rent_2br": 260},
+            "Периферия":    {"type": "economy",  "avg_sqm": 570,  "rent_2br": 210},
         },
     },
 
@@ -546,8 +570,8 @@ LOCATIONS: Dict[str, Dict] = {
     "Самоков": {
         "imotbg_id": "36",
         "zones": {
-            "Център":       {"type": "mid",      "avg_sqm": 750,  "rent_2br": 270},
-            "Периферия":    {"type": "economy",  "avg_sqm": 580,  "rent_2br": 210},
+            "Център":       {"type": "mid",      "avg_sqm": 790,  "rent_2br": 280},
+            "Периферия":    {"type": "economy",  "avg_sqm": 610,  "rent_2br": 220},
         },
     },
 
@@ -557,10 +581,10 @@ LOCATIONS: Dict[str, Dict] = {
     "Банско": {
         "imotbg_id": "37",
         "zones": {
-            "Стария Банско":     {"type": "premium",  "avg_sqm": 1400, "rent_2br": 600},
-            "Ски зона":          {"type": "luxury",   "avg_sqm": 1800, "rent_2br": 900},
-            "Centrum":           {"type": "mid_high", "avg_sqm": 1200, "rent_2br": 500},
-            "Периферия":         {"type": "mid",      "avg_sqm": 900,  "rent_2br": 380},
+            "Стария Банско":     {"type": "premium",  "avg_sqm": 1500, "rent_2br": 620},
+            "Ски зона":          {"type": "luxury",   "avg_sqm": 1900, "rent_2br": 950},
+            "Centrum":           {"type": "mid_high", "avg_sqm": 1250, "rent_2br": 520},
+            "Периферия":         {"type": "mid",      "avg_sqm": 950,  "rent_2br": 390},
         },
     },
 
@@ -570,8 +594,8 @@ LOCATIONS: Dict[str, Dict] = {
     "Петрич": {
         "imotbg_id": "38",
         "zones": {
-            "Център":       {"type": "mid",      "avg_sqm": 600,  "rent_2br": 220},
-            "Периферия":    {"type": "economy",  "avg_sqm": 480,  "rent_2br": 180},
+            "Център":       {"type": "mid",      "avg_sqm": 630,  "rent_2br": 230},
+            "Периферия":    {"type": "economy",  "avg_sqm": 500,  "rent_2br": 190},
         },
     },
 
@@ -581,8 +605,8 @@ LOCATIONS: Dict[str, Dict] = {
     "Сандански": {
         "imotbg_id": "39",
         "zones": {
-            "Център":       {"type": "mid",      "avg_sqm": 700,  "rent_2br": 260},
-            "Периферия":    {"type": "economy",  "avg_sqm": 560,  "rent_2br": 210},
+            "Център":       {"type": "mid",      "avg_sqm": 730,  "rent_2br": 270},
+            "Периферия":    {"type": "economy",  "avg_sqm": 580,  "rent_2br": 220},
         },
     },
 
@@ -592,8 +616,8 @@ LOCATIONS: Dict[str, Dict] = {
     "Гоце Делчев": {
         "imotbg_id": "40",
         "zones": {
-            "Център":       {"type": "mid",      "avg_sqm": 680,  "rent_2br": 250},
-            "Периферия":    {"type": "economy",  "avg_sqm": 540,  "rent_2br": 200},
+            "Център":       {"type": "mid",      "avg_sqm": 710,  "rent_2br": 260},
+            "Периферия":    {"type": "economy",  "avg_sqm": 560,  "rent_2br": 210},
         },
     },
 
@@ -603,8 +627,8 @@ LOCATIONS: Dict[str, Dict] = {
     "Ботевград": {
         "imotbg_id": "41",
         "zones": {
-            "Център":       {"type": "mid",      "avg_sqm": 700,  "rent_2br": 250},
-            "Периферия":    {"type": "economy",  "avg_sqm": 550,  "rent_2br": 200},
+            "Център":       {"type": "mid",      "avg_sqm": 730,  "rent_2br": 260},
+            "Периферия":    {"type": "economy",  "avg_sqm": 570,  "rent_2br": 210},
         },
     },
 
@@ -614,8 +638,8 @@ LOCATIONS: Dict[str, Dict] = {
     "Троян": {
         "imotbg_id": "42",
         "zones": {
-            "Център":       {"type": "mid",      "avg_sqm": 650,  "rent_2br": 240},
-            "Периферия":    {"type": "economy",  "avg_sqm": 520,  "rent_2br": 190},
+            "Център":       {"type": "mid",      "avg_sqm": 680,  "rent_2br": 250},
+            "Периферия":    {"type": "economy",  "avg_sqm": 540,  "rent_2br": 200},
         },
     },
 
@@ -625,8 +649,8 @@ LOCATIONS: Dict[str, Dict] = {
     "Севлиево": {
         "imotbg_id": "43",
         "zones": {
-            "Център":       {"type": "mid",      "avg_sqm": 620,  "rent_2br": 230},
-            "Периферия":    {"type": "economy",  "avg_sqm": 490,  "rent_2br": 180},
+            "Център":       {"type": "mid",      "avg_sqm": 650,  "rent_2br": 240},
+            "Периферия":    {"type": "economy",  "avg_sqm": 510,  "rent_2br": 190},
         },
     },
 
@@ -636,8 +660,8 @@ LOCATIONS: Dict[str, Dict] = {
     "Велинград": {
         "imotbg_id": "44",
         "zones": {
-            "Centre":       {"type": "mid",      "avg_sqm": 750,  "rent_2br": 270},
-            "Периферия":    {"type": "economy",  "avg_sqm": 600,  "rent_2br": 220},
+            "Център":       {"type": "mid",      "avg_sqm": 790,  "rent_2br": 280},
+            "Периферия":    {"type": "economy",  "avg_sqm": 630,  "rent_2br": 230},
         },
     },
 
@@ -647,8 +671,8 @@ LOCATIONS: Dict[str, Dict] = {
     "Горна Оряховица": {
         "imotbg_id": "45",
         "zones": {
-            "Център":       {"type": "mid",      "avg_sqm": 650,  "rent_2br": 240},
-            "Периферия":    {"type": "economy",  "avg_sqm": 520,  "rent_2br": 190},
+            "Център":       {"type": "mid",      "avg_sqm": 680,  "rent_2br": 250},
+            "Периферия":    {"type": "economy",  "avg_sqm": 540,  "rent_2br": 200},
         },
     },
 
@@ -658,8 +682,8 @@ LOCATIONS: Dict[str, Dict] = {
     "Свищов": {
         "imotbg_id": "46",
         "zones": {
-            "Център":       {"type": "mid",      "avg_sqm": 600,  "rent_2br": 220},
-            "Периферия":    {"type": "economy",  "avg_sqm": 480,  "rent_2br": 180},
+            "Център":       {"type": "mid",      "avg_sqm": 630,  "rent_2br": 230},
+            "Периферия":    {"type": "economy",  "avg_sqm": 500,  "rent_2br": 190},
         },
     },
 
@@ -669,8 +693,8 @@ LOCATIONS: Dict[str, Dict] = {
     "Димитровград": {
         "imotbg_id": "47",
         "zones": {
-            "Център":       {"type": "mid",      "avg_sqm": 650,  "rent_2br": 240},
-            "Периферия":    {"type": "economy",  "avg_sqm": 520,  "rent_2br": 190},
+            "Център":       {"type": "mid",      "avg_sqm": 680,  "rent_2br": 250},
+            "Периферия":    {"type": "economy",  "avg_sqm": 540,  "rent_2br": 200},
         },
     },
 
@@ -680,8 +704,8 @@ LOCATIONS: Dict[str, Dict] = {
     "Нова Загора": {
         "imotbg_id": "48",
         "zones": {
-            "Център":       {"type": "mid",      "avg_sqm": 550,  "rent_2br": 200},
-            "Периферия":    {"type": "economy",  "avg_sqm": 430,  "rent_2br": 160},
+            "Център":       {"type": "mid",      "avg_sqm": 580,  "rent_2br": 210},
+            "Периферия":    {"type": "economy",  "avg_sqm": 450,  "rent_2br": 170},
         },
     },
 
@@ -691,8 +715,8 @@ LOCATIONS: Dict[str, Dict] = {
     "Разлог": {
         "imotbg_id": "49",
         "zones": {
-            "Център":       {"type": "mid",      "avg_sqm": 800,  "rent_2br": 280},
-            "Периферия":    {"type": "economy",  "avg_sqm": 640,  "rent_2br": 230},
+            "Център":       {"type": "mid",      "avg_sqm": 840,  "rent_2br": 295},
+            "Периферия":    {"type": "economy",  "avg_sqm": 670,  "rent_2br": 240},
         },
     },
 
@@ -702,19 +726,19 @@ LOCATIONS: Dict[str, Dict] = {
     "Провадия": {
         "imotbg_id": "50",
         "zones": {
-            "Център":       {"type": "mid",      "avg_sqm": 580,  "rent_2br": 210},
-            "Периферия":    {"type": "economy",  "avg_sqm": 450,  "rent_2br": 170},
+            "Център":       {"type": "mid",      "avg_sqm": 610,  "rent_2br": 220},
+            "Периферия":    {"type": "economy",  "avg_sqm": 470,  "rent_2br": 180},
         },
     },
 
     # ═══════════════════════════════════════════════════════════════════════
-    # НОВА ПАЗАРА
+    # НОВИ ПАЗАР
     # ═══════════════════════════════════════════════════════════════════════
     "Нови пазар": {
         "imotbg_id": "51",
         "zones": {
-            "Център":       {"type": "mid",      "avg_sqm": 580,  "rent_2br": 210},
-            "Периферия":    {"type": "economy",  "avg_sqm": 450,  "rent_2br": 170},
+            "Център":       {"type": "mid",      "avg_sqm": 610,  "rent_2br": 220},
+            "Периферия":    {"type": "economy",  "avg_sqm": 470,  "rent_2br": 180},
         },
     },
 
@@ -724,8 +748,8 @@ LOCATIONS: Dict[str, Dict] = {
     "Карнобат": {
         "imotbg_id": "52",
         "zones": {
-            "Център":       {"type": "mid",      "avg_sqm": 580,  "rent_2br": 210},
-            "Периферия":    {"type": "economy",  "avg_sqm": 450,  "rent_2br": 170},
+            "Център":       {"type": "mid",      "avg_sqm": 610,  "rent_2br": 220},
+            "Периферия":    {"type": "economy",  "avg_sqm": 470,  "rent_2br": 180},
         },
     },
 
@@ -735,8 +759,8 @@ LOCATIONS: Dict[str, Dict] = {
     "Козлодуй": {
         "imotbg_id": "53",
         "zones": {
-            "Център":       {"type": "mid",      "avg_sqm": 600,  "rent_2br": 220},
-            "Периферия":    {"type": "economy",  "avg_sqm": 480,  "rent_2br": 180},
+            "Център":       {"type": "mid",      "avg_sqm": 630,  "rent_2br": 230},
+            "Периферия":    {"type": "economy",  "avg_sqm": 500,  "rent_2br": 190},
         },
     },
 
@@ -759,16 +783,14 @@ def get_zones(city: str) -> List[str]:
     """Всички зони/квартали за даден град."""
     if city not in LOCATIONS:
         return ["Център", "Средна зона", "Периферия"]
-    zones = list(LOCATIONS[city]["zones"].keys())
-    return zones
+    return list(LOCATIONS[city]["zones"].keys())
 
 
 def get_avg_price(city: str, zone: str) -> int:
-    """Средна продажна цена €/кв.м за град + квартал."""
+    """Средна продажна цена €/кв.м за град + квартал (ново строителство = база)."""
     try:
         return LOCATIONS[city]["zones"][zone]["avg_sqm"]
     except KeyError:
-        # Fallback по тип зона
         if city in LOCATIONS:
             first_zone = next(iter(LOCATIONS[city]["zones"].values()))
             return first_zone["avg_sqm"]
@@ -783,7 +805,6 @@ def get_avg_rent(city: str, zone: str, sqm: float = 65.0) -> int:
         base = LOCATIONS[city]["zones"][zone]["rent_2br"]
     except KeyError:
         base = 500
-    # Скалиране: ±15% за всеки ±20 кв.м спрямо 65
     scale = 1.0 + (sqm - 65.0) / 65.0 * 0.4
     scale = max(0.5, min(scale, 2.5))
     return int(base * scale)
@@ -899,19 +920,13 @@ def get_imotbg_url(
     price_min: int,
     price_max: int,
 ) -> str:
-    """Генерира URL за търсене в imot.bg.
-    Използва модерния SEO формат /obiavi/prodazhbi/<grad>/<kvartal>
-    с query параметри за цена и площ.
-    """
+    """Генерира URL за търсене в imot.bg."""
     city_slug = _CITY_SLUGS.get(city, "grad-sofiya")
-
-    # Квартал slug (само за Sofia)
     zone_part = ""
     if city == "София":
         zone_slug = _SOFIA_ZONE_SLUGS.get(zone)
         if zone_slug:
             zone_part = f"/{zone_slug}"
-
     base = f"https://www.imot.bg/obiavi/prodazhbi/{city_slug}{zone_part}"
     params = (
         f"?f4={sqm_min}&f5={sqm_max}"
