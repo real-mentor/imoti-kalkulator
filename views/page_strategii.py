@@ -10,7 +10,7 @@ from typing import Optional
 from utils.database import save_calculation
 from utils.market_data import (
     PROGRES_KOEFICIENTI, RISK_ETAP, INFLACIYA_GOD, PAZARNO_POSKAPVANE_GOD,
-    BUY_HOLD_OPERATIVNI_PCT, ESS_TAKS_GOD,
+    BUY_HOLD_OPERATIVNI_PCT, DANUK_NAEM_PCT,
 )
 from utils.calculations import (
     mesechna_vnоska, noi, cap_rate, cash_on_cash,
@@ -276,11 +276,10 @@ def render():
             elif i == 3:  # Наем
                 mes_cf = det["mes_cf"]
                 pb = det["payback"]
-                god_razkhodi_mes = pokupna * (
-                    BUY_HOLD_OPERATIVNI_PCT["remont_rez"]
-                    + BUY_HOLD_OPERATIVNI_PCT["danuk_imot"]
-                    + BUY_HOLD_OPERATIVNI_PCT["zastrakhovka"]
-                ) / 12 + naem * BUY_HOLD_OPERATIVNI_PCT["ess_upravl"] + ESS_TAKS_GOD / 12
+                god_razkhodi_mes = (
+                    pokupna * (BUY_HOLD_OPERATIVNI_PCT["danuk_imot"] + BUY_HOLD_OPERATIVNI_PCT["zastrakhovka"]) / 12
+                    + naem * DANUK_NAEM_PCT
+                )
                 naem_neto_mes = naem * (1 - BUY_HOLD_OPERATIVNI_PCT["vacancy"]) - god_razkhodi_mes
                 st.markdown(
                     f"""
@@ -288,7 +287,9 @@ def render():
                     |-----------|---------|
                     | Брутен месечен наем | {format_eur(naem)} |
                     | Vacancy (5%) | -{format_eur(naem * BUY_HOLD_OPERATIVNI_PCT['vacancy'])} |
-                    | Оперативни разходи/мес | -{format_eur(god_razkhodi_mes)} |
+                    | Данък имот (0.1%/год) | -{format_eur(pokupna * BUY_HOLD_OPERATIVNI_PCT['danuk_imot'] / 12)} |
+                    | Застраховка (0.2%/год) | -{format_eur(pokupna * BUY_HOLD_OPERATIVNI_PCT['zastrakhovka'] / 12)} |
+                    | Данък наем 9% | -{format_eur(naem * DANUK_NAEM_PCT)} |
                     | **Нетен наем/мес (NOI/12)** | **{format_eur(naem_neto_mes)}** |
                     | Месечна ипотека | {format_eur(det['vnоska'])} |
                     | NOI (годишен) | {format_eur(det['noi'])} |

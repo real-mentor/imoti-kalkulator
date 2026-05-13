@@ -9,8 +9,7 @@ from utils.market_data import (
     VACANCY_RATE,
     ZASTRAKHOVKA_GOD_PCT,
     DANUK_IMOT_GOD_PCT,
-    REMONTNI_REZERV_PCT,
-    ESS_TAKS_GOD,
+    DANUK_NAEM_PCT,
     FIX_FLIP_PRAVILO_70,
     FIX_FLIP_PRODAJBA_RAZKHODI,
     FIX_FLIP_SROK_REMONT_MES,
@@ -66,24 +65,20 @@ def noi(
     vacancy: Optional[float] = None,
     zastrakhovka_pct: Optional[float] = None,
     danuk_pct: Optional[float] = None,
-    remont_pct: Optional[float] = None,
-    ess_god: Optional[float] = None,
 ) -> float:
     """
     Net Operating Income (NOI) — годишен нетен оперативен доход.
+    Разходи: застраховка + данък имот (% от имота) + данък наем 9% (от наема).
     """
     vac = vacancy if vacancy is not None else VACANCY_RATE
     zast = zastrakhovka_pct if zastrakhovka_pct is not None else ZASTRAKHOVKA_GOD_PCT
     dan = danuk_pct if danuk_pct is not None else DANUK_IMOT_GOD_PCT
-    rem = remont_pct if remont_pct is not None else REMONTNI_REZERV_PCT
-    ess = ess_god if ess_god is not None else ESS_TAKS_GOD
 
     god_naem = mesecen_naem * 12 * (1 - vac)
     razkhodi = (
         cena_imot * zast
         + cena_imot * dan
-        + cena_imot * rem
-        + ess
+        + mesecen_naem * 12 * DANUK_NAEM_PCT
     )
     return god_naem - razkhodi
 
@@ -108,7 +103,7 @@ def cash_on_cash(
     vac = vacancy if vacancy is not None else VACANCY_RATE
     god_naem = mesecen_naem * 12 * (1 - vac)
     god_ipoteka = mesechna_ipoteka * 12
-    god_razkhodi = cena_imot * (ZASTRAKHOVKA_GOD_PCT + DANUK_IMOT_GOD_PCT + REMONTNI_REZERV_PCT) + ESS_TAKS_GOD
+    god_razkhodi = cena_imot * (ZASTRAKHOVKA_GOD_PCT + DANUK_IMOT_GOD_PCT) + mesecen_naem * 12 * DANUK_NAEM_PCT
     net_cf = god_naem - god_ipoteka - god_razkhodi
     if samoychastie_eur <= 0:
         return 0.0
@@ -124,9 +119,9 @@ def mesecen_pаricen_potok(
     """Месечен паричен поток (наем - вноска - разходи/12)."""
     vac = vacancy if vacancy is not None else VACANCY_RATE
     god_razkhodi_mes = (
-        cena_imot * (ZASTRAKHOVKA_GOD_PCT + DANUK_IMOT_GOD_PCT + REMONTNI_REZERV_PCT)
-        + ESS_TAKS_GOD
-    ) / 12
+        cena_imot * (ZASTRAKHOVKA_GOD_PCT + DANUK_IMOT_GOD_PCT) / 12
+        + mesecen_naem * DANUK_NAEM_PCT
+    )
     return mesecen_naem * (1 - vac) - mesechna_ipoteka - god_razkhodi_mes
 
 
@@ -233,17 +228,15 @@ def buy_hold_analiz(
     notarialni = pokupna * notarialni_pct
     vnоska = mesechna_vnоska(kredit, lihva, srok_god)
 
-    # Разходи за притежание: 1.3% от стойността на имота + 2% от наема + €60/год ЕСС
+    # Разходи за притежание: данък имот + застраховка (% от имота) + данък наем 9%
     vac = BUY_HOLD_OPERATIVNI_PCT["vacancy"]           # 5% незаетост
     pct_imot = (
-        BUY_HOLD_OPERATIVNI_PCT["remont_rez"]          # 1.0% ремонтен резерв
-        + BUY_HOLD_OPERATIVNI_PCT["danuk_imot"]        # 0.1% данък имот
+        BUY_HOLD_OPERATIVNI_PCT["danuk_imot"]          # 0.1% данък имот
         + BUY_HOLD_OPERATIVNI_PCT["zastrakhovka"]      # 0.2% застраховка
-    )                                                   # = 1.3% от pokupna/год
+    )                                                   # = 0.3% от pokupna/год
     operativni_god = (
         pokupna * pct_imot
-        + mesecen_naem * 12 * BUY_HOLD_OPERATIVNI_PCT["ess_upravl"]  # 2% от наема
-        + ESS_TAKS_GOD                                                 # €60/год
+        + mesecen_naem * 12 * DANUK_NAEM_PCT           # 9% данък доход от наем
     )
 
     stojnosti = badeshta_cena_po_godini(pokupna, etap, max_godini, pazarno_poskapvane)
