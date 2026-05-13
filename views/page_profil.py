@@ -9,6 +9,15 @@ from utils.market_data import GRADOVE, LIHVA_DEFAULT
 
 
 def render():
+    # Auto-load saved profile from Supabase once per session
+    user = st.session_state.get("user")
+    if user and not st.session_state.get("profil_loaded"):
+        from utils.database import load_profile
+        saved, err = load_profile(user["id"])
+        if saved and not err:
+            st.session_state.profil = {**st.session_state.profil, **saved}
+        st.session_state.profil_loaded = True
+
     p = st.session_state.profil
 
     st.markdown('<p class="page-indicator">СТЪПКА 1</p>', unsafe_allow_html=True)
@@ -93,6 +102,21 @@ def render():
         )
 
     st.session_state.profil = p
+
+    # ── ЗАПАЗВАНЕ НА ПРОФИЛА ──────────────────────────────────────────────────
+    st.markdown("---")
+    user = st.session_state.get("user")
+    if user:
+        if st.button("💾 Запамети профила", type="secondary"):
+            from utils.database import save_profile
+            ok, err = save_profile(user["id"], dict(p))
+            if ok:
+                st.success("✅ Профилът е запазен успешно!")
+            else:
+                st.error(f"❌ Грешка при запазване: {err}")
+        st.caption("Профилът ти се запазва в облака. При следващо влизане данните ще се заредят автоматично.")
+    else:
+        st.info("🔒 Влез в акаунта си, за да запазиш профила в облака.")
 
     # ── ИЗЧИСЛЕНИЯ ────────────────────────────────────────────────────────────
     kap = kreditен_kapacitet(
